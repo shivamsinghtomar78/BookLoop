@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { BadgeCheck, ThumbsUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,13 +14,15 @@ import {
 import { MyListingActions } from "@/components/sell/my-listing-row";
 import { AlertRow } from "@/components/alerts/alert-row";
 import { BookCard } from "@/components/book-card";
+import { DonorShareButton } from "@/components/donor-share";
 import { getCurrentUser } from "@/services/users";
 import { myListings } from "@/services/listings";
 import { myWishlist } from "@/services/wishlist";
 import { myAlerts } from "@/services/alerts";
+import { completedDonations } from "@/services/exchange";
 import { recentActiveListings } from "@/db/repos/listings";
 import { getDb } from "@/db/client";
-import { listingPhotos } from "@/db/schema";
+import { listingPhotos, ratings } from "@/db/schema";
 import { CATEGORIES } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +44,11 @@ export default async function ProfilePage() {
   }
 
   const { profile } = current;
+  const donations = await completedDonations(profile.id);
+  const thumbs = await getDb()
+    .select({ id: ratings.id })
+    .from(ratings)
+    .where(and(eq(ratings.rateeId, profile.id), eq(ratings.thumbsUp, true)));
   const memberSince = profile.createdAt.toLocaleDateString("en-IN", {
     month: "short",
     year: "numeric",
@@ -61,15 +68,25 @@ export default async function ProfilePage() {
           </div>
           <div className="flex flex-col items-end gap-1">
             <span className="text-subtle flex items-center gap-1 text-sm">
-              <ThumbsUp className="size-4" /> 0
+              <ThumbsUp className="size-4" /> {thumbs.length}
             </span>
             {profile.verified && (
               <Badge className="bg-primary-soft text-primary-active">
                 <BadgeCheck className="size-3.5" /> Verified student
               </Badge>
             )}
+            {donations > 0 && (
+              <Badge className="bg-primary-soft text-primary-active">
+                🌱 Book donor · {donations}
+              </Badge>
+            )}
           </div>
         </div>
+        {donations > 0 && (
+          <div className="mt-3">
+            <DonorShareButton count={donations} />
+          </div>
+        )}
         {!profile.emailConfirmed && (
           <div className="bg-surface-soft mt-4 flex flex-col items-start gap-2 rounded-lg p-3">
             <p className="text-sm">

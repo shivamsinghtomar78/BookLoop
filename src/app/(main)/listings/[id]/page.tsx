@@ -117,7 +117,9 @@ export default async function ListingPage({
               <Badge variant="secondary">EXCHANGE</Badge>
             )}
             {listing.status === "reserved" && (
-              <Badge variant="secondary">Reserved</Badge>
+              <Badge variant="secondary">
+                {listing.mode === "donate" ? "Claimed" : "Reserved"}
+              </Badge>
             )}
           </div>
           <p className="text-subtle text-sm">

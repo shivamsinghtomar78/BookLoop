@@ -42,9 +42,11 @@ type Step = "form" | "preview" | { published: { id: number; bookloopId: string }
 export function SellForm({
   sellerClass,
   edit,
+  presetMode,
 }: {
   sellerClass: number;
   edit?: { id: number; values: ListingInput };
+  presetMode?: "sell" | "exchange" | "donate";
 }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("form");
@@ -53,7 +55,7 @@ export function SellForm({
   const form = useForm<ListingInput>({
     resolver: zodResolver(listingSchema),
     defaultValues: edit?.values ?? {
-      mode: "sell",
+      mode: presetMode ?? "sell", // /sell?mode=exchange|donate presets the toggle
       category: "textbook",
       class: sellerClass, // smart default: seller's own class (D-042)
       photos: [],

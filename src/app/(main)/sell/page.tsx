@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function SellPage({
   searchParams,
 }: {
-  searchParams: Promise<{ edit?: string }>;
+  searchParams: Promise<{ edit?: string; mode?: string }>;
 }) {
   const current = await getCurrentUser();
   if (!current) redirect("/"); // proxy covers this; double-checked server-side
@@ -33,7 +33,10 @@ export default async function SellPage({
     );
   }
 
-  const { edit } = await searchParams;
+  const { edit, mode } = await searchParams;
+  const presetMode = ["sell", "exchange", "donate"].includes(mode ?? "")
+    ? (mode as "sell" | "exchange" | "donate")
+    : undefined;
   let editProps: { id: number; values: ListingInput } | undefined;
 
   if (edit) {
@@ -66,5 +69,11 @@ export default async function SellPage({
     }
   }
 
-  return <SellForm sellerClass={current.profile.class} edit={editProps} />;
+  return (
+    <SellForm
+      sellerClass={current.profile.class}
+      edit={editProps}
+      presetMode={presetMode}
+    />
+  );
 }

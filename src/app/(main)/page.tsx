@@ -151,13 +151,13 @@ export default async function HomePage({
           />
           <Shelf
             title="Free — donations available"
-            href="/search?mode=donate"
+            href="/donate"
             books={donations}
             savedSet={savedSet}
           />
           <Shelf
             title="Wanted for exchange"
-            href="/search?mode=exchange"
+            href="/exchange"
             books={wanted}
             savedSet={savedSet}
           />

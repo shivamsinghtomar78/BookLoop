@@ -280,10 +280,11 @@ export function ChatScreen(props: {
         <div ref={bottomRef} />
       </div>
 
-      {/* Transaction actions — role & state aware (Task 4.5) */}
+      {/* Transaction actions — role, state & mode aware (Tasks 4.5/5.3) */}
       <TxActions
         role={props.role}
         state={state}
+        mode={props.listing.mode}
         busy={busy}
         onReserve={() => runState(reserveAction)}
         onCancel={() => runState(cancelReservationAction)}
@@ -344,6 +345,7 @@ export function ChatScreen(props: {
 function TxActions({
   role,
   state,
+  mode,
   busy,
   onReserve,
   onCancel,
@@ -353,6 +355,7 @@ function TxActions({
 }: {
   role: "buyer" | "seller";
   state: TxState;
+  mode: string;
   busy: boolean;
   onReserve: () => void;
   onCancel: () => void;
@@ -360,6 +363,25 @@ function TxActions({
   onConfirm: () => void;
   onRate: (up: boolean) => void;
 }) {
+  // Mode-aware labels (Task 5.3): sell / exchange / donate read naturally
+  const labels =
+    mode === "exchange"
+      ? {
+          reserve: "Agree exchange with this buyer",
+          nudge: "Exchanged — ask them to confirm",
+          confirm: "Confirm exchanged ✓",
+        }
+      : mode === "donate"
+        ? {
+            reserve: "Reserve for this student",
+            nudge: "Handed over — ask them to confirm",
+            confirm: "Confirm received ✓",
+          }
+        : {
+            reserve: "Reserve for this buyer",
+            nudge: "Handed over — ask buyer to confirm",
+            confirm: "Confirm received ✓",
+          };
   // Rate prompt after close (skippable — it just stays available)
   if (state.confirmed && state.myRating === null) {
     return (
@@ -387,7 +409,7 @@ function TxActions({
   if (state.listingStatus === "active" && role === "seller") {
     return (
       <Button className="mt-2" size="lg" disabled={busy} onClick={onReserve}>
-        Reserve for this buyer
+        {labels.reserve}
       </Button>
     );
   }
@@ -397,12 +419,12 @@ function TxActions({
       <div className="mt-2 flex gap-2">
         {role === "buyer" && state.reservedForMe && (
           <Button size="lg" className="flex-1" disabled={busy} onClick={onConfirm}>
-            Confirm received ✓
+            {labels.confirm}
           </Button>
         )}
         {role === "seller" && (
           <Button size="lg" className="flex-1" disabled={busy} onClick={onAskConfirm}>
-            Handed over — ask buyer to confirm
+            {labels.nudge}
           </Button>
         )}
         <Button variant="outline" size="lg" disabled={busy} onClick={onCancel}>

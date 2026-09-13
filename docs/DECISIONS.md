@@ -433,6 +433,14 @@ Every decision made during development goes in this file — big or small, produ
 - **Instead of:** Native WebSockets on a Neon Function (fits the platform constraint, was my recommendation — user preferred socket.io); polling-only (D-022 original).
 - **Status:** ✅ Active (supersedes the "no WebSockets" half of D-022; polling remains as fallback)
 
+### D-056 — Exchange closes the offer listing; linked dual-listing close is post-pilot
+- **Date:** 2026-09-14
+- **Area:** Product
+- **Decision:** An exchange completes through the standard reserve→confirm machinery on the OFFER listing (the transaction carries `mode=exchange`). If the counterparty's give-away book is also listed, they close it through the same flow themselves — the system does not auto-link and auto-close two listings, because `wants_book` is free text and there is no reliable link between listings. Chat CTAs adapt per mode ("Agree exchange…", "Confirm exchanged ✓"). "For you" matching is word-level in JS (all meaningful words of `wants_book` present in a title, either direction) — no engine, per D-031.
+- **Why:** Auto-closing a second listing needs structured book identity + linked offers — exactly what the post-pilot matching engine (PHASE-7B) introduces; guessing links from free text risks closing the wrong listing, which is worse than asking the second student to tap confirm once.
+- **Instead of:** Auto-detecting and closing both listings from text matching.
+- **Status:** ✅ Active
+
 ---
 
-*Next entry: D-056.*
+*Next entry: D-057.*
