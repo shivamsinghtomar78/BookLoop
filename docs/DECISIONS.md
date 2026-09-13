@@ -425,6 +425,14 @@ Every decision made during development goes in this file — big or small, produ
 - **Instead of:** The original `max-w-md` phone-column shell at all sizes; per-page one-off media queries.
 - **Status:** ✅ Active
 
+### D-055 — Real-time chat via socket.io (user instruction), push-only, with polling fallback
+- **Date:** 2026-09-14
+- **Area:** Tech
+- **Decision:** Chat gets real-time push via **socket.io** (user's explicit choice, twice confirmed), partially superseding D-022. Architecture: a standalone Node socket.io server (`realtime/server.ts`, `npm run realtime`) that is **push-only** — ALL writes stay in Next.js server actions (single home for validation, rate limits, notifications), which fire `pg_notify('chat_events', …)` after each write; the realtime server holds a Postgres LISTEN connection (unpooled URL — fine, it's a persistent process) and relays to socket.io rooms (`chat:<id>`). Auth: short-lived HS256 JWT minted by `/api/chat-token` (shared `CHAT_JWT_SECRET`), per-room participant re-check against the DB on every join. The D-037 REST polling (4s visible/15s idle) remains as **automatic fallback** whenever the socket is down — chat works on a Vercel-only deployment with zero realtime infra, and upgrades to instant when the server runs.
+- **Why:** User instructed "use socket.io". Constraint honestly navigated: socket.io needs a persistent Node process — impossible on Vercel serverless, and Neon Functions expose only standard-WebSocket upgrades (no http.Server for engine.io). A repo-local Node server delivers literal socket.io in dev today and on any free Node host later, while the polling fallback keeps D-033's Vercel+Neon-only deployment fully functional.
+- **Instead of:** Native WebSockets on a Neon Function (fits the platform constraint, was my recommendation — user preferred socket.io); polling-only (D-022 original).
+- **Status:** ✅ Active (supersedes the "no WebSockets" half of D-022; polling remains as fallback)
+
 ---
 
-*Next entry: D-055.*
+*Next entry: D-056.*

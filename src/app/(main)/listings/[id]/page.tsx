@@ -7,8 +7,9 @@ import { notFound } from "next/navigation";
 import { and, eq, ne, sql as dsql } from "drizzle-orm";
 import { ThumbsUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { OpenChatButton } from "@/components/chat/open-chat-button";
 import { WishlistHeart } from "@/components/wishlist-heart";
+import { expireStaleReservation } from "@/services/transactions";
 import { getDb } from "@/db/client";
 import { listingPhotos, listings, ratings, users } from "@/db/schema";
 import { getCurrentUser } from "@/services/users";
@@ -33,6 +34,12 @@ export default async function ListingPage({
     .where(eq(listings.id, id))
     .limit(1);
   if (!listing || listing.status === "deleted") notFound();
+
+  // Lazy 72h zombie-reservation check (D-043) — may flip reserved → active
+  if (listing.status === "reserved") {
+    const relisted = await expireStaleReservation(listing.id);
+    if (relisted) listing.status = "active";
+  }
 
   const current = await getCurrentUser();
 
@@ -156,9 +163,7 @@ export default async function ListingPage({
         {!isOwnListing && listing.status === "active" && (
           <div className="border-hairline bg-card fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t p-3 shadow-lg md:bottom-0 lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
             <div className="mx-auto max-w-md lg:max-w-none">
-              <Button size="lg" className="w-full" disabled>
-                💬 Chat with Seller — coming in Phase 4
-              </Button>
+              <OpenChatButton listingId={listing.id} />
               <p className="text-subtle mt-1 text-center text-xs">
                 Handover happens at the school pickup point
               </p>

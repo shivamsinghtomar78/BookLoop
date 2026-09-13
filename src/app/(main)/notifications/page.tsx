@@ -51,13 +51,15 @@ export default async function NotificationsPage() {
                 </p>
               </div>
             );
+            const target =
+              n.type === "chat_message"
+                ? "/chats"
+                : n.listingId
+                  ? `/listings/${n.listingId}`
+                  : null;
             return (
               <li key={n.id}>
-                {n.listingId ? (
-                  <Link href={`/listings/${n.listingId}`}>{inner}</Link>
-                ) : (
-                  inner
-                )}
+                {target ? <Link href={target}>{inner}</Link> : inner}
               </li>
             );
           })}

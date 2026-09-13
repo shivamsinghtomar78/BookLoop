@@ -91,8 +91,14 @@ export default async function ProfilePage() {
         <WishlistSection userId={profile.id} userClass={profile.class} />
         <AlertsSection userId={profile.id} />
 
-        <section className="flex flex-col gap-4">
-          <EmptyTab title="My Chats" hint="Chats with buyers and sellers appear here." />
+        <section>
+          <h2 className="font-semibold">My Chats</h2>
+          <p className="text-subtle mt-1 text-sm">
+            <Link href="/chats" className="text-primary underline-offset-4 hover:underline">
+              Open your chats
+            </Link>{" "}
+            — buying and selling conversations live there.
+          </p>
         </section>
 
         <div className="lg:hidden">
