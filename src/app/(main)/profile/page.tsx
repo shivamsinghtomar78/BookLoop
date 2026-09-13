@@ -15,6 +15,7 @@ import { MyListingActions } from "@/components/sell/my-listing-row";
 import { AlertRow } from "@/components/alerts/alert-row";
 import { BookCard } from "@/components/book-card";
 import { DonorShareButton } from "@/components/donor-share";
+import { ReportProblem } from "@/components/report-problem";
 import { getCurrentUser } from "@/services/users";
 import { myListings } from "@/services/listings";
 import { myWishlist } from "@/services/wishlist";
@@ -98,8 +99,11 @@ export default async function ProfilePage() {
         )}
       </section>
 
-        <div className="hidden lg:block">
-          <LogoutButton />
+        <div className="flex items-center gap-2">
+          <ReportProblem />
+          <div className="hidden lg:block">
+            <LogoutButton />
+          </div>
         </div>
       </div>
 

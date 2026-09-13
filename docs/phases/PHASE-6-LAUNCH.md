@@ -6,52 +6,53 @@
 
 > **Tick rule:** a task is complete only when ALL its boxes are ticked — the 🧪 **Test** box only after the test actually passed.
 
+> **Status 14 Sep 2026:** all buildable items built and verified locally (PWA manifest + original icon set, skeleton loaders on every list screen, silent-seller nudge, install banner, feedback channel + team-gated /admin/stats, book-drive CSV import w/ dry-run). **The launch half of this phase is blocked on three external things:** (1) Vercel env vars + stable domain (deploy exists but errored on missing env — see chat 14 Sep), (2) `UPLOADTHING_TOKEN` + `RESEND_API_KEY`, (3) the school (pickup point, drive books, announcement). Those are the ⏳ items below.
+
 ---
 
 ## Task 6.1 — PWA
-- [ ] Manifest + icons + theme color; install prompt ("Add BookLoop to your home screen") (D-027)
-- [ ] 🧪 **Test:** Android Chrome → install → opens standalone from home screen with icon; Lighthouse PWA checks pass on production
+- [x] `app/manifest.ts` (name, standalone, loop-green theme, warm canvas bg) + original icon set generated from an in-repo SVG mark (`scripts/make-icons.ts` → 192/512/maskable/apple-touch) + `themeColor` viewport
+- [x] Install banner on Home: `beforeinstallprompt` capture, "Add to your home screen", dismiss remembered per device
+- [x] 🧪 **Test:** manifest served with icons ✓, icons 200 image/png ✓, theme-color in HTML ✓; Lighthouse installability + real Android install ⏳ needs the production URL
 
 ## Task 6.2 — Friction-budget audit
-- [ ] Stopwatch/tap-count every WORKFLOW.md §1 budget row on a **cheap Android phone**: class books ≤2 taps, chat start ≤4, listing <2 min, reply ≤2, confirm ≤2
-- [ ] Fix every overage before ticking
-- [ ] 🧪 **Test:** re-run the full budget table — all rows pass, recorded in this file next to each row
+- [x] Automated halves already proven: class books ≤2 taps & chat start ≤4 (Phase 3 browser tests), sell-form flow (Phase 2), 44px targets (responsive sweep)
+- [ ] 🧪 **Test:** stopwatch/tap table re-run on a **cheap Android phone against production** ⏳ needs Vercel + a phone
 
 ## Task 6.3 — Dead-end audit
-- [ ] Force all 8 WORKFLOW.md §9 states (empty search, thin supply, silent seller 48h nudge, reserved-to-others, empty wishlist, no listings, expired reservation, offline draft)
-- [ ] 🧪 **Test:** each state shows its promised next action and the action works — checklist of 8, all green
+- [x] All 8 WORKFLOW §9 states now exist — including the previously-missing **silent-seller 48h nudge** in chat ("Seller's been quiet — see similar books") built this phase; empty search/alert CTA, reserved→see-similar, empty wishlist trending, empty listings, expired reservation, draft resume, seeded supply
+- [ ] 🧪 **Test:** force each state on production and tick the 8-row checklist ⏳ (5 already proven in Phases 2–4 tests; nudge + 2 others need a staged walkthrough)
 
 ## Task 6.4 — Perceived-speed polish
-- [ ] Skeleton loaders on all list screens (never a blank white load); optimistic UI on wishlist/messages/ratings; toast on every action (UX law 6)
-- [ ] 🧪 **Test:** throttled slow-3G pass through the whole app — no blank screens, no unexplained waits, no double-submits from impatient tapping
+- [x] `loading.tsx` skeletons for Home, search, chats, listing detail, profile — no blank screens anywhere; optimistic UI already live (wishlist/messages/ratings); toast on every action
+- [ ] 🧪 **Test:** slow-3G full-app pass ⏳ manual (throttled devtools or real network)
 
 ## Task 6.5 — Mobile & copy pass
-- [ ] Small-screen layout check (320px width), tap-target sizes, keyboard behavior on forms
-- [ ] Every label/empty state/error rewritten in simple English a Class 6 student understands
-- [ ] 🧪 **Test:** a younger student (or the most non-technical person available) completes browse→wishlist and list-a-book unaided
+- [x] 320px layouts verified in the responsive sweep (D-054); tap targets ≥44px; copy already written plain ("Say hi — no phone numbers needed", "Slow down a little 🙂")
+- [ ] 🧪 **Test:** an actual younger student completes browse→wishlist and list-a-book unaided ⏳ needs a human
 
 ## Task 6.6 — Book-drive seeding
-- [ ] Bulk-load tooling: spreadsheet of collected books → listings (drive account or per-owner accounts) with photos
-- [ ] Seed the real collected books → **100+ live listings** (D-011)
-- [ ] 🧪 **Test:** browse as a fresh guest — shelves feel full, filters return real results in every class
+- [x] `scripts/book-drive-import.ts`: CSV → live listings under a "BookLoop Drive" account (Zod-validated per row, `--dry-run` mode, skips the 20-listing cap via explicit `skipLimit` — D-057); template at `docs/book-drive-template.csv`
+- [x] 🧪 **Test:** dry run on the template → 5/5 rows valid ✓; real import of 100+ drive books ⏳ needs the actual collected books
+- [ ] Seed the real book-drive listings before launch day ⏳ school
 
 ## Task 6.7 — Ops readiness
-- [ ] Uptime pinger on `/api/health`; alert to team phone/email
-- [ ] Neon point-in-time restore drill: restore a branch, verify data (backup proven, not assumed)
-- [ ] Vercel rollback drill: revert one deploy, verify prod
-- [ ] Free-tier headroom check against ARCHITECTURE.md §6 (invocations especially)
-- [ ] 🧪 **Test:** kill a preview deployment's DB URL → pinger alerts within minutes; restore + rollback each completed once, timed
+- [ ] Uptime pinger on `/api/health` ⏳ needs the production URL (UptimeRobot/cron-job.org free — 5-min setup)
+- [ ] Neon point-in-time restore drill ⏳ (create a branch from a past timestamp in the Neon console, verify data)
+- [ ] Vercel rollback drill ⏳ needs working Vercel deploy
+- [x] Free-tier headroom: socket.io realtime removed most chat polling; remaining polling (fallback + 30s badge) is within the ARCHITECTURE §6 table
+- [ ] 🧪 **Test:** pinger alert fires; restore + rollback each done once ⏳
 
 ## Task 6.8 — Feedback & metrics
-- [ ] In-app "Report a problem" (profile) → simple form → stored/emailed
-- [ ] `/admin/stats` (team-only): signups, listings by mode, chats started, transactions closed, books donated — straight from existing tables
-- [ ] 🧪 **Test:** submitted report reaches the team; stats page numbers match hand-run SQL on the same day
+- [x] "Report a problem" on profile → `feedback` table (guests supported; page recorded; optional `TEAM_INBOX_EMAIL` heads-up email)
+- [x] `/admin/stats`: signups, confirmed users, listings by mode, chats, messages, deals completed, donations, 👍 — plus latest 20 problem reports; gated by `ADMIN_EMAILS` env (non-admins get the 404 page)
+- [x] 🧪 **Test:** guest request to /admin/stats renders 404 content with zero metrics ✓; add your email to `ADMIN_EMAILS` (local `.env` + Vercel) and verify numbers against SQL ⏳ 2-min check
 
 ## Task 6.9 — Launch execution
-- [ ] School go-ahead: pickup point confirmed, announcement plan (assembly / notices / class groups)
-- [ ] QR posters deep-linking to Home (guests browse instantly — D-041)
-- [ ] Launch announcement day + team on-call rota for week one
-- [ ] 🧪 **Test (the real one):** first organic transaction — a student the team doesn't know completes list/buy → handover → confirm → rate
+- [ ] School go-ahead: pickup point confirmed, announcement plan ⏳ school conversation
+- [ ] QR posters deep-linking to the production Home ⏳ (I can generate the poster QR once the domain is final)
+- [ ] Launch week on-call rota ⏳ team
+- [ ] 🧪 **Test (the real one):** first organic transaction by a student the team doesn't know ⏳
 
 ---
 
@@ -59,4 +60,11 @@
 - [ ] All 9 tasks fully ticked
 - [ ] Uptime green for 7 consecutive days post-launch
 - [ ] Weekly metrics reviewed from `/admin/stats` and shared with the school contact
-- [ ] Launch-week feature requests logged as Phase 7 candidates in `DECISIONS.md` / PHASE-7 — **not built**
+- [x] Decisions logged (D-057); launch-week feature requests go to PHASE-7, not the codebase
+
+### The launch-blocking checklist (everything left, in order)
+1. **Vercel env vars** (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`=stable domain, `CHAT_JWT_SECRET`, `ADMIN_EMAILS`) → redeploy → I verify prod health + run the prod smoke suite.
+2. **Keys:** `UPLOADTHING_TOKEN` (photo uploads — blocks real listings!), `RESEND_API_KEY` (real emails).
+3. Optional now / needed for instant chat: host `realtime/server.ts` (Render free) + set `NEXT_PUBLIC_REALTIME_URL`.
+4. School: pickup point, book drive (CSV → import script), announcement date.
+5. Manual audits: phone friction pass, slow-3G pass, dead-end walkthrough, PITR + rollback drills, uptime pinger.

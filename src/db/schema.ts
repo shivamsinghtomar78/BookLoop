@@ -214,6 +214,16 @@ export const bookAlerts = pgTable("book_alerts", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// ---------- Feedback (Phase 6 Task 6.8 — "Report a problem") ----------
+
+export const feedback = pgTable("feedback", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id), // null = guest report
+  body: text("body").notNull(),
+  page: text("page"), // where they were when reporting
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // ---------- In-app notifications ----------
 
 export const notifications = pgTable(

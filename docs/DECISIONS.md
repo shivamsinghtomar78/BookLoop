@@ -441,6 +441,14 @@ Every decision made during development goes in this file — big or small, produ
 - **Instead of:** Auto-detecting and closing both listings from text matching.
 - **Status:** ✅ Active
 
+### D-057 — Pilot ops tooling: feedback table, env-gated admin stats, drive import with explicit limit bypass
+- **Date:** 2026-09-14
+- **Area:** Tech
+- **Decision:** (1) Problem reports land in a new `feedback` table (userId nullable — guests can report; page path recorded; optional `TEAM_INBOX_EMAIL` best-effort email). (2) `/admin/stats` is gated by an `ADMIN_EMAILS` env allowlist and renders the 404 page for everyone else — no roles/permissions system for a pilot with one team. (3) The book-drive importer (`scripts/book-drive-import.ts`, CSV per `docs/book-drive-template.csv`) creates listings under a dedicated "BookLoop Drive" profile and passes an explicit `skipLimit` to `createListing` — the 20-active cap (D-039) protects against student spam, not against the launch seeding it exists to enable. (4) PWA icons are generated from an in-repo original SVG mark via `scripts/make-icons.ts`.
+- **Why:** Smallest possible ops surface for a pilot: one table, one env var, one script — no analytics service, no admin framework, no icon design dependency.
+- **Instead of:** A roles column + admin UI; an external feedback/analytics service; hand-made icons.
+- **Status:** ✅ Active
+
 ---
 
-*Next entry: D-057.*
+*Next entry: D-058.*

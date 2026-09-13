@@ -243,6 +243,25 @@ export function ChatScreen(props: {
         <Stepper state={state} />
       </div>
 
+      {/* Silent-seller nudge (WORKFLOW.md §9): my last message unanswered 48h+ */}
+      {(() => {
+        const last = msgs.at(-1);
+        const silent48h =
+          props.role === "buyer" &&
+          state.listingStatus === "active" &&
+          last &&
+          last.senderId === props.meId &&
+          Date.now() - new Date(last.at).getTime() > 48 * 3600 * 1000;
+        return silent48h ? (
+          <div className="bg-surface-soft mt-2 rounded-lg px-3 py-2 text-xs">
+            Seller&apos;s been quiet for a while —{" "}
+            <Link href="/search" className="text-primary font-medium underline-offset-2 hover:underline">
+              see similar books
+            </Link>
+          </div>
+        ) : null;
+      })()}
+
       {/* Pinned pickup card (D-005) */}
       <div className="bg-primary-soft text-primary-active mt-2 flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs">
         <span>🏫 Meet at the school library/office to hand over books</span>

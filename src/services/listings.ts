@@ -36,18 +36,24 @@ function toRow(input: ListingInput, sellerId: number) {
   };
 }
 
-export async function createListing(input: ListingInput, sellerId: number) {
+export async function createListing(
+  input: ListingInput,
+  sellerId: number,
+  opts?: { skipLimit?: boolean }, // book-drive bulk import only (Task 6.6)
+) {
   const db = getDb();
 
   // Rate limit: max active listings per user (D-039)
-  const [{ count }] = await db
-    .select({ count: dsql<number>`count(*)::int` })
-    .from(listings)
-    .where(and(eq(listings.sellerId, sellerId), eq(listings.status, "active")));
-  if (count >= LIMITS.maxActiveListingsPerUser) {
-    throw new DomainError(
-      `You already have ${LIMITS.maxActiveListingsPerUser} active listings — close or delete one first.`,
-    );
+  if (!opts?.skipLimit) {
+    const [{ count }] = await db
+      .select({ count: dsql<number>`count(*)::int` })
+      .from(listings)
+      .where(and(eq(listings.sellerId, sellerId), eq(listings.status, "active")));
+    if (count >= LIMITS.maxActiveListingsPerUser) {
+      throw new DomainError(
+        `You already have ${LIMITS.maxActiveListingsPerUser} active listings — close or delete one first.`,
+      );
+    }
   }
 
   // Reserve the id up front so listing + photos commit in ONE atomic batch

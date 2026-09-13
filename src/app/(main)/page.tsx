@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { BookCard, type BookCardData } from "@/components/book-card";
+import { InstallPrompt } from "@/components/install-prompt";
 import {
   activeListingsByMode,
   activeListingsForClass,
@@ -119,6 +120,8 @@ export default async function HomePage({
           );
         })}
       </div>
+
+      <InstallPrompt />
 
       {mode ? (
         <Shelf
