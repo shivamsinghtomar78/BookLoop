@@ -43,3 +43,7 @@ next-env.d.ts
 
 # local agent settings & generated skills
 .claude/
+
+# playwright mcp artifacts
+.playwright-mcp/
+responsive-*.png
