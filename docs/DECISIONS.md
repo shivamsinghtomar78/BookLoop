@@ -409,6 +409,14 @@ Every decision made during development goes in this file — big or small, produ
 - **Why:** Clean separation of code and documentation once the Next.js app occupies the root.
 - **Status:** ✅ Active
 
+### D-053 — Better Auth confirmed over provisioned Neon Auth
+- **Date:** 2026-09-13
+- **Area:** Tech
+- **Decision:** Stay with Better Auth (D-019) even though the Neon CLI setup provisioned Neon Auth (JWKS env vars exist in `.env.local`, unused). Better Auth tables generated via its CLI into `src/db/auth-schema.ts` and pushed alongside our schema; sessions/passwords/verification live in our Neon DB; `nextCookies()` plugin lets server actions set session cookies. Signup = server action calling `auth.api.signUpEmail` + our `users` profile insert (linked by `auth_id`); email verification state is owned by Better Auth and lazily mirrored to `users.email_confirmed` on session read. Email sending: Resend when `RESEND_API_KEY` exists, console fallback in dev (verification URL in server logs).
+- **Why:** D-019's reasons hold (own-DB user table, roster-verification flag path); switching auth systems mid-build for a service we didn't evaluate would be scope drift. Neon Auth remains available as a future option if Better Auth becomes a limitation.
+- **Instead of:** Adopting Neon Auth because it happened to be provisioned.
+- **Status:** ✅ Active
+
 ---
 
-*Next entry: D-053.*
+*Next entry: D-054.*

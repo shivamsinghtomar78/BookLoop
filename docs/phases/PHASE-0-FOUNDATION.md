@@ -12,8 +12,8 @@
 
 ## Task 0.1 — Scaffold the app
 - [x] `npx create-next-app` — TypeScript, App Router, Tailwind, ESLint *(Next 16.3.5, Tailwind v4, src dir, local git initialized)*
-- [ ] Push to a GitHub repo; `main` branch protected (PRs only) ⏳ needs your GitHub account
-- [ ] 🧪 **Test:** fresh clone → `npm i` → `npm run dev` → default page loads with zero console errors ⏳ after GitHub push
+- [x] Pushed to GitHub: `shivamsinghtomar78/BookLoop`, branch `main` *(branch protection: enable in repo Settings → Branches when ready)*
+- [ ] 🧪 **Test:** fresh clone → `npm i` → `npm run dev` → default page loads with zero console errors ⏳ 5-minute check, ideally by a teammate
 
 ## Task 0.2 — UI system & design tokens
 - [x] `shadcn/ui` init; base components added: button, input, card, sheet, dialog, field (form), label, badge, skeleton *(this shadcn version runs on Base UI — buttons use `render`, not `asChild`)*
