@@ -19,6 +19,7 @@ import { MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Sheet,
   SheetContent,
@@ -155,9 +156,8 @@ function SignupForm({
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="class">Class</Label>
-            <select
+            <NativeSelect
               id="class"
-              className="border-input h-8 rounded-lg border bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               {...form.register("class", { valueAsNumber: true })}
             >
               {CLASSES.map((c) => (
@@ -165,7 +165,7 @@ function SignupForm({
                   Class {c}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <FieldError message={errors.class?.message} />
           </div>
         </div>

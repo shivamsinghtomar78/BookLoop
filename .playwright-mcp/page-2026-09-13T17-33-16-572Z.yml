@@ -1,0 +1,122 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - generic [ref=f1e3]:
+      - generic [ref=f1e4]:
+        - link "BookLoop" [ref=f1e5] [cursor=pointer]:
+          - /url: /
+        - paragraph [ref=f1e6]: Give your books a second life
+      - navigation "Main" [ref=f1e7]:
+        - link "Home" [ref=f1e8] [cursor=pointer]:
+          - /url: /
+        - link "Search" [ref=f1e9] [cursor=pointer]:
+          - /url: /search
+        - button "Chats" [ref=f1e10]
+        - link "Profile" [ref=f1e11] [cursor=pointer]:
+          - /url: /profile
+        - button "Sell a book" [ref=f1e12]
+  - main [ref=f1e13]:
+    - generic [ref=f1e14]:
+      - generic [ref=f1e15]:
+        - heading "Recently listed" [level=2] [ref=f1e16]
+        - generic [ref=f1e17]:
+          - link "Story Collection (Novel) FREE Story Collection (Novel) Short stories · Good" [ref=f1e18] [cursor=pointer]:
+            - /url: /listings/22
+            - generic [ref=f1e19]:
+              - img "Story Collection (Novel)" [ref=f1e20]
+              - generic [ref=f1e21]: FREE
+            - generic [ref=f1e22]:
+              - paragraph [ref=f1e23]: Story Collection (Novel)
+              - paragraph [ref=f1e24]: Short stories · Good
+          - link "Hindi Textbook — Class 9 FREE Hindi Textbook — Class 9 Class 9 · Hindi · Fair" [ref=f1e25] [cursor=pointer]:
+            - /url: /listings/21
+            - generic [ref=f1e26]:
+              - img "Hindi Textbook — Class 9" [ref=f1e27]
+              - generic [ref=f1e28]: FREE
+            - generic [ref=f1e29]:
+              - paragraph [ref=f1e30]: Hindi Textbook — Class 9
+              - paragraph [ref=f1e31]: Class 9 · Hindi · Fair
+          - 'link "Science Textbook — Class 8 EXCHANGE Science Textbook — Class 8 Class 8 · Science · Good wants: Class 8 Maths" [ref=f1e32] [cursor=pointer]':
+            - /url: /listings/20
+            - generic [ref=f1e33]:
+              - img "Science Textbook — Class 8" [ref=f1e34]
+              - generic [ref=f1e35]: EXCHANGE
+            - generic [ref=f1e36]:
+              - paragraph [ref=f1e37]: Science Textbook — Class 8
+              - paragraph [ref=f1e38]: Class 8 · Science · Good
+              - paragraph [ref=f1e39]: "wants: Class 8 Maths"
+          - link [ref=f1e40] [cursor=pointer]:
+            - /url: /listings/19
+            - img "Adventure Novel (English)" [ref=f1e42]
+            - generic [ref=f1e43]:
+              - paragraph [ref=f1e44]: Adventure Novel (English)
+              - paragraph [ref=f1e45]: Adventure · Good
+              - paragraph [ref=f1e46]: ₹90
+          - link [ref=f1e47] [cursor=pointer]:
+            - /url: /listings/18
+            - img "Olympiad Maths Workbook" [ref=f1e49]
+            - generic [ref=f1e50]:
+              - paragraph [ref=f1e51]: Olympiad Maths Workbook
+              - paragraph [ref=f1e52]: Maths · Like New
+              - paragraph [ref=f1e53]: ₹200
+          - link [ref=f1e54] [cursor=pointer]:
+            - /url: /listings/17
+            - img "Physics Problem Book (JEE basics)" [ref=f1e56]
+            - generic [ref=f1e57]:
+              - paragraph [ref=f1e58]: Physics Problem Book (JEE basics)
+              - paragraph [ref=f1e59]: Physics · Good
+              - paragraph [ref=f1e60]: ₹250
+          - link [ref=f1e61] [cursor=pointer]:
+            - /url: /listings/16
+            - img "Science Question Bank — Class 8" [ref=f1e63]
+            - generic [ref=f1e64]:
+              - paragraph [ref=f1e65]: Science Question Bank — Class 8
+              - paragraph [ref=f1e66]: Class 8 · Science · Worn
+              - paragraph [ref=f1e67]: ₹40
+          - link [ref=f1e68] [cursor=pointer]:
+            - /url: /listings/15
+            - img "Maths Practice Guide — Class 10" [ref=f1e70]
+            - generic [ref=f1e71]:
+              - paragraph [ref=f1e72]: Maths Practice Guide — Class 10
+              - paragraph [ref=f1e73]: Class 10 · Maths · Good
+              - paragraph [ref=f1e74]: ₹180
+          - link [ref=f1e75] [cursor=pointer]:
+            - /url: /listings/14
+            - img "English Reader — Class 8" [ref=f1e77]
+            - generic [ref=f1e78]:
+              - paragraph [ref=f1e79]: English Reader — Class 8
+              - paragraph [ref=f1e80]: Class 8 · English · Fair
+              - paragraph [ref=f1e81]: ₹60
+          - link [ref=f1e82] [cursor=pointer]:
+            - /url: /listings/13
+            - img "Maths Textbook — Class 9" [ref=f1e84]
+            - generic [ref=f1e85]:
+              - paragraph [ref=f1e86]: Maths Textbook — Class 9
+              - paragraph [ref=f1e87]: Class 9 · Maths · Like New
+              - paragraph [ref=f1e88]: ₹150
+          - link [ref=f1e89] [cursor=pointer]:
+            - /url: /listings/12
+            - img "Science Textbook — Class 9" [ref=f1e91]
+            - generic [ref=f1e92]:
+              - paragraph [ref=f1e93]: Science Textbook — Class 9
+              - paragraph [ref=f1e94]: Class 9 · Science · Good
+              - paragraph [ref=f1e95]: ₹120
+      - generic [ref=f1e96]:
+        - heading "Free — donations available" [level=2] [ref=f1e97]
+        - generic [ref=f1e98]:
+          - link "Story Collection (Novel) FREE Story Collection (Novel) Short stories · Good" [ref=f1e99] [cursor=pointer]:
+            - /url: /listings/22
+            - generic [ref=f1e100]:
+              - img "Story Collection (Novel)" [ref=f1e101]
+              - generic [ref=f1e102]: FREE
+            - generic [ref=f1e103]:
+              - paragraph [ref=f1e104]: Story Collection (Novel)
+              - paragraph [ref=f1e105]: Short stories · Good
+          - link "Hindi Textbook — Class 9 FREE Hindi Textbook — Class 9 Class 9 · Hindi · Fair" [ref=f1e106] [cursor=pointer]:
+            - /url: /listings/21
+            - generic [ref=f1e107]:
+              - img "Hindi Textbook — Class 9" [ref=f1e108]
+              - generic [ref=f1e109]: FREE
+            - generic [ref=f1e110]:
+              - paragraph [ref=f1e111]: Hindi Textbook — Class 9
+              - paragraph [ref=f1e112]: Class 9 · Hindi · Fair
+  - region "Notifications alt+T"

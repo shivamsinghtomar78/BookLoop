@@ -42,7 +42,8 @@ export default async function ProfilePage() {
   });
 
   return (
-    <div className="mt-6 flex flex-col gap-6">
+    <div className="mx-auto mt-6 flex w-full max-w-md flex-col gap-6 md:max-w-2xl lg:mt-8 lg:grid lg:max-w-5xl lg:grid-cols-[minmax(280px,1fr)_2fr] lg:items-start lg:gap-8">
+      <div className="flex flex-col gap-4 lg:sticky lg:top-20">
       <section className="rounded-2xl bg-card p-5">
         <div className="flex items-center justify-between">
           <div>
@@ -74,17 +75,26 @@ export default async function ProfilePage() {
         )}
       </section>
 
-      <MyListingsSection sellerId={profile.id} />
+        <div className="hidden lg:block">
+          <LogoutButton />
+        </div>
+      </div>
 
-      <section className="flex flex-col gap-4">
-        <EmptyTab title="My Chats" hint="Chats with buyers and sellers appear here." />
-        <EmptyTab
-          title="My Wishlist"
-          hint="Save books with the heart — coming in Phase 3."
-        />
-      </section>
+      <div className="flex flex-col gap-6">
+        <MyListingsSection sellerId={profile.id} />
 
-      <LogoutButton />
+        <section className="flex flex-col gap-4">
+          <EmptyTab title="My Chats" hint="Chats with buyers and sellers appear here." />
+          <EmptyTab
+            title="My Wishlist"
+            hint="Save books with the heart — coming in Phase 3."
+          />
+        </section>
+
+        <div className="lg:hidden">
+          <LogoutButton />
+        </div>
+      </div>
     </div>
   );
 }
@@ -122,7 +132,7 @@ async function MyListingsSection({ sellerId }: { sellerId: number }) {
   return (
     <section>
       <h2 className="font-semibold">My Listings</h2>
-      <div className="mt-2 flex flex-col gap-2">
+      <div className="mt-2 grid grid-cols-1 gap-2 xl:grid-cols-2">
         {[...active, ...closed].map((r) => (
           <div key={r.id} className="flex items-center gap-3 rounded-2xl bg-card p-2.5">
             <Link

@@ -148,3 +148,17 @@
     @apply font-sans;
   }
 }
+
+/* Fluid type scale (responsive spec): clamp() instead of breakpoint jumps.
+   Body copy stays text-base (16px); text-sm/xs are for secondary text only. */
+@utility text-display {
+  font-size: clamp(1.5rem, 1.1rem + 1.7vw, 2.25rem);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+@utility text-title-lg {
+  font-size: clamp(1.125rem, 1rem + 0.7vw, 1.5rem);
+  line-height: 1.25;
+  font-weight: 600;
+}

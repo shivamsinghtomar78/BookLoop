@@ -24,7 +24,15 @@ function conditionLabel(value: BookCardData["condition"]) {
   return CONDITIONS.find((c) => c.value === value)?.label ?? value;
 }
 
-export function BookCard({ book }: { book: BookCardData }) {
+export function BookCard({
+  book,
+  layout = "shelf",
+}: {
+  book: BookCardData;
+  /** "shelf" = fixed width inside horizontal scrollers (< md);
+      "grid"  = fluid, fills its grid cell (md+ sections, results pages). */
+  layout?: "shelf" | "grid";
+}) {
   const meta =
     book.class && book.subject
       ? `Class ${book.class} · ${book.subject}`
@@ -33,7 +41,10 @@ export function BookCard({ book }: { book: BookCardData }) {
   return (
     <Link
       href={`/listings/${book.id}`}
-      className="group block w-40 shrink-0 sm:w-44"
+      className={
+        "group block rounded-2xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none " +
+        (layout === "shelf" ? "w-40 shrink-0 sm:w-44" : "w-full")
+      }
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-surface-soft">
         {book.photoUrl && (
@@ -41,7 +52,7 @@ export function BookCard({ book }: { book: BookCardData }) {
             src={book.photoUrl}
             alt={book.title}
             fill
-            sizes="(max-width: 640px) 160px, 176px"
+            sizes="(max-width: 768px) 176px, (max-width: 1280px) 20vw, 220px"
             className="object-cover transition duration-300 ease-out group-hover:scale-110"
           />
         )}

@@ -417,6 +417,14 @@ Every decision made during development goes in this file — big or small, produ
 - **Instead of:** Adopting Neon Auth because it happened to be provisioned.
 - **Status:** ✅ Active
 
+### D-054 — Responsive system: mobile-first primitives, nav switch at md, desktop-native reflow
+- **Date:** 2026-09-13
+- **Area:** Design
+- **Decision:** The app is fully responsive 320px→4K via reusable primitives, not scattered breakpoint hacks: (1) size rules live in the shadcn primitives — inputs/selects/primary buttons are 44px on touch (`h-11`) and denser from `md` (`h-10/h-9`); a shared `NativeSelect` replaces hand-classed selects; (2) fluid type via clamp() utilities (`.text-display`, `.text-title-lg`) in globals.css; body copy stays ≥16px; (3) shell container `max-w-7xl` with `px-4 sm:px-6 lg:px-8`; (4) navigation switches at `md`: bottom tab bar below, full top-nav bar (shared `useGatedNav` intent gating) above; (5) content REFLOWS to desktop-native layouts — Home shelves become responsive grids from `md` (3→6 cols by 2xl), listing detail becomes a two-column product page with sticky info at `lg`, profile becomes a two-column layout at `lg`, sell form widens to `max-w-2xl` with 4-across condition cards at `md`.
+- **Why:** User requirement: flawless on all screens with a mobile-first approach — and explicitly a real desktop experience, not a widened phone column. Verified live via Playwright at 320/375/768/1024/1440/1920 + phone landscape: zero horizontal scroll everywhere, correct nav per breakpoint, grid column counts 3/4/5/6, nav items ≥51px and CTAs 44px on mobile.
+- **Instead of:** The original `max-w-md` phone-column shell at all sizes; per-page one-off media queries.
+- **Status:** ✅ Active
+
 ---
 
-*Next entry: D-054.*
+*Next entry: D-055.*

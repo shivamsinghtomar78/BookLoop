@@ -17,6 +17,7 @@ import { Share2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { PhotoUploader } from "@/components/sell/photo-uploader";
 import {
   publishListingAction,
@@ -132,10 +133,10 @@ export function SellForm({
   return (
     <form
       onSubmit={form.handleSubmit(() => setStep("preview"))}
-      className="mt-4 flex flex-col gap-5 pb-8"
+      className="mx-auto mt-4 flex w-full max-w-md flex-col gap-5 pb-8 md:mt-8 md:max-w-2xl"
       noValidate
     >
-      <h1 className="text-2xl font-bold">{edit ? "Edit listing" : "Sell a book"}</h1>
+      <h1 className="text-display">{edit ? "Edit listing" : "Sell a book"}</h1>
       {hadDraft && !edit && (
         <p className="bg-primary-soft text-primary-active rounded-lg px-3 py-2 text-sm">
           Draft resumed — pick up where you left off.
@@ -176,9 +177,8 @@ export function SellForm({
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-1.5">
             <Label htmlFor="class">Class</Label>
-            <select
+            <NativeSelect
               id="class"
-              className="border-input h-8 rounded-lg border bg-transparent px-2.5 text-sm"
               {...form.register("class", { valueAsNumber: true })}
             >
               {CLASSES.map((c) => (
@@ -186,7 +186,7 @@ export function SellForm({
                   Class {c}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <FieldError message={errors.class?.message} />
           </div>
           <div className="grid gap-1.5">
@@ -201,18 +201,14 @@ export function SellForm({
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-1.5">
             <Label htmlFor="exam">Exam</Label>
-            <select
-              id="exam"
-              className="border-input h-8 rounded-lg border bg-transparent px-2.5 text-sm"
-              {...form.register("exam")}
-            >
+            <NativeSelect id="exam" {...form.register("exam")}>
               <option value="">Pick…</option>
               {EXAMS.map((e) => (
                 <option key={e} value={e}>
                   {e}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <FieldError message={errors.exam?.message} />
           </div>
           <div className="grid gap-1.5">
@@ -245,7 +241,7 @@ export function SellForm({
       {/* 5. Condition — 4 picture cards */}
       <div className="grid gap-1.5">
         <Label>Condition</Label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
           {CONDITIONS.map((c) => (
             <button
               key={c.value}
@@ -344,7 +340,7 @@ function Chip({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-lg border px-3 py-1.5 text-sm font-medium transition",
+        "min-h-10 rounded-lg border px-3.5 text-sm font-medium transition",
         active ? "border-primary bg-primary-soft text-primary-active" : "border-hairline bg-card text-subtle",
       )}
     >
@@ -378,8 +374,8 @@ function PreviewView({
   const conditionLabel = CONDITIONS.find((c) => c.value === values.condition)?.label;
 
   return (
-    <div className="mt-4 flex flex-col gap-4 pb-8">
-      <h1 className="text-2xl font-bold">Preview</h1>
+    <div className="mx-auto mt-4 flex w-full max-w-md flex-col gap-4 pb-8 md:mt-8">
+      <h1 className="text-display">Preview</h1>
       <p className="text-subtle text-sm">Exactly how buyers will see it.</p>
 
       <div className="rounded-2xl bg-card p-4">
@@ -453,9 +449,9 @@ function SuccessView({
   }
 
   return (
-    <div className="mt-10 flex flex-col items-center gap-4 pb-8 text-center">
+    <div className="mx-auto mt-10 flex w-full max-w-md flex-col items-center gap-4 pb-8 text-center md:mt-16">
       <p className="text-4xl">🎉</p>
-      <h1 className="text-2xl font-bold">{edited ? "Changes saved!" : "Your book is live!"}</h1>
+      <h1 className="text-display">{edited ? "Changes saved!" : "Your book is live!"}</h1>
       <p className="text-subtle text-sm">
         BookLoop ID: <span className="text-foreground font-semibold">{bookloopId}</span>
       </p>
