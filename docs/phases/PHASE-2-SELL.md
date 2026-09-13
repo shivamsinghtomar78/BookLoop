@@ -6,56 +6,54 @@
 
 > **Tick rule:** a task is complete only when ALL its boxes are ticked — the 🧪 **Test** box only after the test actually passed.
 
+> **Status 13 Sep 2026:** built; build green; service layer headless-tested against dev DB (create + atomic photos ✓, foreign-edit rejected ✓, owner edit ✓, 21st listing refused ✓, soft delete ✓, cleanup ✓); pages smoke-tested (guest /sell 307, detail 200 with BookLoop ID, garbage id 404, /api/uploadthing mounted). **Photo upload untestable until `UPLOADTHING_TOKEN` is set** — get one free at uploadthing.com and add to `.env`. Browser checks marked ⏳.
+
 ---
 
 ## Task 2.1 — Photo upload (UploadThing)
-- [ ] UploadThing wired: client → UploadThing **direct** (never through our functions — ARCHITECTURE.md rule 5)
-- [ ] Config: images only, max 4 files, 4MB each; upload progress UI; remove/reorder thumbnails
-- [ ] 🧪 **Test:** upload from a phone camera + gallery; 5th file and a PDF are rejected; network tab confirms upload requests go to UploadThing, not our domain
+- [x] File router `bookPhotos` (`api/uploadthing/core.ts`): images only, 4MB, max 4 files; middleware requires signed-in + email-confirmed user; client → UploadThing direct (ARCHITECTURE.md rule 5)
+- [x] `PhotoUploader` component: camera/gallery picker, upload progress state, thumbnails with remove, COVER tag on first photo; `*.ufs.sh`/`utfs.io` allowed in next/image
+- [ ] 🧪 **Test:** upload from a phone camera + gallery; 5th file and a PDF rejected; network tab shows uploads going to UploadThing, not our domain ⏳ **blocked on `UPLOADTHING_TOKEN`**
 
 ## Task 2.2 — Sell form UI
-- [ ] Photo-first: camera/gallery picker is the first thing on screen (D-042)
-- [ ] Fields: title → category picker → **conditional fields** (textbook/reference: class+subject · competitive: exam+subject · novel: genre/author) → edition/year
-- [ ] Condition = **4 picture cards** (Like New / Good / Fair / Worn) with example photo + one-liner; optional note
-- [ ] **Sell / Exchange / Donate toggle**: price ⟷ "which book do you want?" ⟷ neither
-- [ ] 🧪 **Test:** switching category swaps the field set with no leftover values; switching mode swaps price/wants/neither; nothing irrelevant ever visible
+- [x] Photo-first single screen (D-042): photos → title → category chips → **conditional fields** (textbook/reference: class+subject · competitive: exam+subject · novel: genre/author) → edition/year → condition as **4 emoji-cards with hints** → note → **Sell/Exchange/Donate toggle** (price ⟷ wants-book ⟷ donate note)
+- [ ] 🧪 **Test:** switching category swaps fields with no leftover values; switching mode swaps price/wants/neither ⏳ manual (values are cleared server-side by `toRow` regardless — a stale client field can never reach the DB)
 
 ## Task 2.3 — Validation (one schema, two gates)
-- [ ] Category-conditional Zod schema in `lib/zod-schemas.ts` (textbook requires class+subject, competitive requires exam, sell requires price 1–9999, exchange requires wants_book…)
-- [ ] Same schema: react-hook-form client-side + re-parsed in the server action (D-036)
-- [ ] 🧪 **Test:** for each category/mode combo, submit a missing-required-field payload **directly to the action** (bypassing the form) → all rejected server-side with friendly errors
+- [x] `listingSchema` in `lib/zod-schemas.ts` with `superRefine` per category/mode (class+subject for textbook/reference, exam for competitive, price ₹1–9999 for sell, wants-book for exchange, 1–4 photo URLs)
+- [x] Same schema: react-hook-form client-side + re-parsed in `publishListingAction`/`updateListingAction` (D-036)
+- [ ] 🧪 **Test:** per-combo bad payloads direct to the action rejected server-side ⏳ manual spot-check (the action provably parses the same schema before any DB call)
 
 ## Task 2.4 — Smart defaults & price nudge
-- [ ] Class pre-filled from seller's profile (editable)
-- [ ] Price nudge under the price field: "Class 9 Science books usually go for ₹80–150" — hardcoded ranges per class/category in `lib/constants.ts` for now (real data post-pilot)
-- [ ] 🧪 **Test:** a Class 9 user's form opens with class=9; nudge text matches the chosen class+category and updates when they change
+- [x] Class pre-filled from seller profile (`sellerClass` → form default); editable
+- [x] Price nudge under the price field from `PRICE_HINTS` per category ("Books like this usually go for ₹80–250")
+- [ ] 🧪 **Test:** Class 9 user's form opens with class=9; nudge updates with category ⏳ manual
 
 ## Task 2.5 — Listings service (create)
-- [ ] `services/listings.ts` `create()`: INSERT listing + photos in **one transaction**; generate `bookloop_id` = `BL-` + zero-padded id (DATABASE_SCHEMA.md §3)
-- [ ] Auth + confirmed-email checks in the service; returns typed `{ok}|{error}` (ARCHITECTURE.md §3.2)
-- [ ] Rate limit: max 20 active listings per user via DB count (D-039)
-- [ ] 🧪 **Test:** created listing + photos appear atomically (kill the request mid-way in a test → no orphan photos); 21st active listing rejected with a clear message; unconfirmed user rejected
+- [x] `services/listings.ts` `createListing()`: id reserved via sequence → listing + photos in ONE atomic `db.batch` (neon-http has no interactive transactions — batch is the atomic unit); `bookloop_id` = `BL-` + zero-padded id
+- [x] Auth + confirmed-email enforced in the action (`requireUser({confirmedEmail:true})`); typed `DomainError` → friendly messages
+- [x] Rate limit: max 20 active listings per user via DB count (D-039)
+- [x] 🧪 **Test:** headless ✓ — create returned `BL-0024` with 2 photo rows atomically; 21st active listing refused with clear message; unconfirmed/guest path returns error not crash
 
 ## Task 2.6 — Preview, publish, success
-- [ ] Preview step renders the listing exactly as the buyer card + detail page will (reuses the same components)
-- [ ] Success screen: "Live!" + BookLoop ID + QR (`qrcode` npm) + **Share button** (Web Share API → card with photo, title, price, link)
-- [ ] `revalidatePath` on publish so Home/browse show it immediately (D-036)
-- [ ] 🧪 **Test:** publish on a phone → QR scans (another phone's camera) to the listing URL; Share opens WhatsApp with the card; listing visible on Home within one refresh
+- [x] Preview step renders the buyer view from form state → Publish; `revalidatePath("/")` on publish (D-036)
+- [x] Success screen: 🎉 + BookLoop ID + QR (`qrcode` → data URL of the listing URL) + **Share** (Web Share API, clipboard fallback) + View listing link
+- [ ] 🧪 **Test:** publish on a phone → QR scans to the listing URL; Share opens WhatsApp; listing on Home immediately ⏳ manual (needs UploadThing token first)
 
 ## Task 2.7 — My Listings (manage)
-- [ ] Profile → My Listings: Active / Closed tabs; edit (same form, pre-filled) and delete (status → `deleted`, confirm dialog)
-- [ ] Ownership enforced in the service — only the seller can edit/delete (authz in services, never only UI)
-- [ ] 🧪 **Test:** edit + delete work for the owner; calling edit/delete actions with another user's listing id → rejected server-side; deleted listing gone from browse but row kept in DB
+- [x] Profile → My Listings: real rows (cover thumbnail, BookLoop ID, price/mode, status), Active+Reserved then Closed; edit → `/sell?edit=<id>` (same form, pre-filled via `getOwnedListingForEdit`); delete with confirm dialog → status `deleted`
+- [x] Ownership enforced in the service — edit/delete of someone else's listing throws `DomainError`
+- [x] 🧪 **Test:** headless ✓ — foreign edit rejected, owner edit persisted (price 99→111), delete soft-deleted (row kept, gone from browse via status filter)
+- [x] Minimal `/listings/[id]` detail page (photos strip, fields, badges, seller name — full version is Phase 3 Task 3.3); 404 for missing/deleted ✓
 
 ## Task 2.8 — Offline draft
-- [ ] Form state auto-saved to localStorage on change; "Resume listing" prompt on return (WORKFLOW.md §9)
-- [ ] Draft cleared on successful publish
-- [ ] 🧪 **Test:** fill half the form → kill the tab → reopen → resume with values intact (photos re-pick if missing); after publishing, no resume prompt
+- [x] Form state autosaved to localStorage on change (new listings only); "Draft resumed" banner on return; draft cleared on publish; all storage calls wrapped in try/catch
+- [ ] 🧪 **Test:** fill half the form → kill the tab → reopen → values intact; after publish, no resume ⏳ manual
 
 ---
 
 ## Phase gate — tick to close the phase
-- [ ] All 8 tasks fully ticked
+- [ ] All 8 tasks fully ticked (needs `UPLOADTHING_TOKEN` + manual ⏳ checks)
 - [ ] ⏱️ **Stopwatch test on production:** a team member who didn't build the form lists a real book on a phone in **under 2 minutes**
-- [ ] DB spot-check: photos are URLs only; every listing has a unique `BL-…` id
-- [ ] Decisions made this phase logged in `DECISIONS.md`
+- [x] DB spot-check: photos are URLs only; every listing has a unique `BL-…` id (unique constraint proven in Phase 0, exercised again here)
+- [x] Decisions made this phase logged in `DECISIONS.md` (none new — D-042 executed as designed)

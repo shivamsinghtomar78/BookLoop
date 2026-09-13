@@ -55,3 +55,23 @@ export const LIMITS = {
 export const RESERVATION_EXPIRY_HOURS = 72;
 
 export const BOOKLOOP_ID_PREFIX = "BL-";
+
+// Price nudge ranges (Task 2.4) — hardcoded for the prototype; replaced by
+// real sold-price data post-pilot. Rough ₹ ranges per category.
+export const PRICE_HINTS: Record<
+  (typeof CATEGORIES)[number]["value"],
+  { lo: number; hi: number }
+> = {
+  textbook: { lo: 60, hi: 180 },
+  reference: { lo: 80, hi: 250 },
+  competitive: { lo: 150, hi: 400 },
+  novel: { lo: 50, hi: 150 },
+};
+
+// Condition picker cards (Task 2.2) — emoji stand in for example photos in the prototype.
+export const CONDITION_EMOJI: Record<string, string> = {
+  like_new: "✨",
+  good: "👍",
+  fair: "📖",
+  worn: "📚",
+};
