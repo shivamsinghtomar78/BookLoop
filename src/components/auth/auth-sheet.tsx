@@ -15,7 +15,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,7 +51,7 @@ export function useAuthSheet() {
 export function AuthSheetProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [mode, setMode] = useState<"signup" | "login" | "check-email">("signup");
+  const [mode, setMode] = useState<"signup" | "login">("signup");
   const [intent, setIntent] = useState<string | null>(null);
 
   const open = useCallback<AuthSheetContextValue["open"]>((opts) => {
@@ -75,15 +74,11 @@ export function AuthSheetProvider({ children }: { children: ReactNode }) {
         <SheetContent side="bottom" className="rounded-t-2xl bg-card">
           <div className="mx-auto w-full max-w-md pb-4">
             {mode === "signup" && (
-              <SignupForm
-                onDone={() => setMode("check-email")}
-                onSwitch={() => setMode("login")}
-              />
+              <SignupForm onDone={finish} onSwitch={() => setMode("login")} />
             )}
             {mode === "login" && (
               <LoginForm onDone={finish} onSwitch={() => setMode("signup")} />
             )}
-            {mode === "check-email" && <CheckEmail onContinue={finish} />}
           </div>
         </SheetContent>
       </Sheet>
@@ -266,18 +261,3 @@ function LoginForm({
   );
 }
 
-function CheckEmail({ onContinue }: { onContinue: () => void }) {
-  return (
-    <div className="flex flex-col items-center gap-3 py-6 text-center">
-      <MailCheck className="text-primary size-10" />
-      <SheetTitle>Check your email</SheetTitle>
-      <SheetDescription className="max-w-xs">
-        We sent you a confirmation link. You can browse right away — confirm
-        your email to list books and chat.
-      </SheetDescription>
-      <Button size="lg" className="mt-2 w-full" onClick={onContinue}>
-        Continue browsing
-      </Button>
-    </div>
-  );
-}

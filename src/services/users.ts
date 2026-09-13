@@ -20,7 +20,8 @@ export async function createProfile(input: {
   const db = getDb();
   const [profile] = await db
     .insert(users)
-    .values({ ...input, emailConfirmed: false })
+    // TESTING MODE (D-059): accounts are born confirmed — no email gate.
+    .values({ ...input, emailConfirmed: true })
     .returning();
   return profile;
 }
@@ -41,23 +42,12 @@ export async function getCurrentUser(): Promise<{
     .limit(1);
   if (!profile) return null;
 
-  // Lazy sync: Better Auth owns email verification; mirror it to our flag once.
-  if (session.user.emailVerified && !profile.emailConfirmed) {
-    await db
-      .update(users)
-      .set({ emailConfirmed: true })
-      .where(eq(users.id, profile.id));
-    profile.emailConfirmed = true;
-  }
-
   return { profile, emailConfirmed: profile.emailConfirmed };
 }
 
 /** For gated pages/actions. Throws typed errors the action layer maps to messages. */
-export async function requireUser(opts?: { confirmedEmail?: boolean }) {
+export async function requireUser() {
   const current = await getCurrentUser();
   if (!current) throw new Error("UNAUTHENTICATED");
-  if (opts?.confirmedEmail && !current.emailConfirmed)
-    throw new Error("EMAIL_UNCONFIRMED");
   return current.profile;
 }

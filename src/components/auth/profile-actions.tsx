@@ -1,16 +1,13 @@
 "use client";
 
-// Client pieces of the profile page: guest CTA buttons, logout, resend-confirmation.
+// Client pieces of the profile page: guest CTA buttons and logout.
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuthSheet } from "@/components/auth/auth-sheet";
-import {
-  resendVerificationAction,
-  signOutAction,
-} from "@/app/(auth)/actions";
+import { signOutAction } from "@/app/(auth)/actions";
 
 export function GuestProfileButtons() {
   const { open } = useAuthSheet();
@@ -55,22 +52,3 @@ export function LogoutButton() {
   );
 }
 
-export function ResendConfirmation() {
-  const [sent, setSent] = useState(false);
-  return (
-    <Button
-      variant="secondary"
-      size="sm"
-      disabled={sent}
-      onClick={async () => {
-        const res = await resendVerificationAction();
-        if (res.ok) {
-          setSent(true);
-          toast.success("Confirmation email sent");
-        } else toast.error(res.error);
-      }}
-    >
-      {sent ? "Sent ✓" : "Resend confirmation email"}
-    </Button>
-  );
-}

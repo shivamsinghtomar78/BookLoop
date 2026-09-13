@@ -24,7 +24,6 @@ export async function signUpAction(raw: unknown): Promise<ActionResult> {
         name: input.fullName,
         email: input.email,
         password: input.password,
-        callbackURL: "/email-verified",
       },
       headers: await headers(),
     });
@@ -79,16 +78,3 @@ export async function signOutAction(): Promise<ActionResult> {
   }
 }
 
-export async function resendVerificationAction(): Promise<ActionResult> {
-  try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) return { ok: false, error: "You're not logged in." };
-    await auth.api.sendVerificationEmail({
-      body: { email: session.user.email, callbackURL: "/email-verified" },
-      headers: await headers(),
-    });
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "Couldn't resend the email. Please try again." };
-  }
-}

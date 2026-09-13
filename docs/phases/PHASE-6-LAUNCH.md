@@ -64,7 +64,8 @@
 
 ### The launch-blocking checklist (everything left, in order)
 1. **Vercel env vars** (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`=stable domain, `CHAT_JWT_SECRET`, `ADMIN_EMAILS`) → redeploy → I verify prod health + run the prod smoke suite.
-2. **Keys:** `UPLOADTHING_TOKEN` (photo uploads — blocks real listings!), `RESEND_API_KEY` (real emails).
+2. **Key:** `UPLOADTHING_TOKEN` (photo uploads — blocks real listings!).
 3. Optional now / needed for instant chat: host `realtime/server.ts` (Render free) + set `NEXT_PUBLIC_REALTIME_URL`.
 4. School: pickup point, book drive (CSV → import script), announcement date.
 5. Manual audits: phone friction pass, slow-3G pass, dead-end walkthrough, PITR + rollback drills, uptime pinger.
+6. **Before real students use it (exit testing mode, D-059):** re-enable email verification (reverse checklist in the decision entry) + pick an email provider (`lib/email.ts` is a one-file swap).

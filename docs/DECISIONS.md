@@ -449,6 +449,23 @@ Every decision made during development goes in this file — big or small, produ
 - **Instead of:** A roles column + admin UI; an external feedback/analytics service; hand-made icons.
 - **Status:** ✅ Active
 
+### D-058 — Phase 7A (student verification) activated; 7B–7E stay gated on pilot data
+- **Date:** 2026-09-14
+- **Area:** Process
+- **Decision:** On the user's "start phase 7", track **7A — Student Verification** is activated (the only track buildable without pilot usage data; needs just a school roster). Design per D-008/D-009: a `school_roster` table (student_id 11 digits + full name + class — no DOB, no photos, ever) imported from a school-provided CSV; students verify by entering their 11-digit ID, which must match the roster row's ID **and** name (token-sorted, case/space-insensitive — "Shivam Singh" = "singh shivam"); success sets `users.student_id` + `verified=true`; the existing UNIQUE constraint on `users.student_id` enforces one account per ID race-safely (second claim fails). Badge renders on profile (slot from Phase 1) and the listing seller card. Tracks 7B (matching engine), 7C (dashboard), 7D (scale seams), 7E (growth) remain gated on pilot evidence per PHASE-7 rule 1.
+- **Why:** 7A's precondition is a roster, not usage data; every other track's trigger literally requires pilot observations that don't exist yet. Building 7A now means full launch needs zero migration AND zero code — just the real roster CSV.
+- **Instead of:** Activating all of Phase 7 at once (violates its own gating rule), or refusing until pilot data exists (7A doesn't need it).
+- **Status:** ✅ Active
+
+### D-059 — TESTING MODE: email verification disabled, Resend removed
+- **Date:** 2026-09-14
+- **Area:** Process
+- **Decision:** For the testing period, auth is plain **email + password with no verification anywhere**: the Better Auth `emailVerification` block is deleted, accounts are created with `email_confirmed = true`, every confirmed-email gate is removed (sell/chat actions, UploadThing middleware, sell page screen, profile banner, auth-sheet "Check your email" state, `/email-verified` page, resend action), the `resend` package is uninstalled, and `lib/email.ts` is a console-only stub (alert/transaction/feedback emails log instead of send — in-app notifications remain the source of truth, unaffected). Existing test accounts flipped to confirmed.
+- **Why:** User instruction — verification steps slow down every test signup, and Resend isn't configured. Signup → sell now takes one step.
+- **Re-enable for full launch (reverse checklist):** restore the `emailVerification` block in `lib/auth.ts` from git history (Phase 1 commit `5db6e33`); set `createProfile` back to `emailConfirmed: false`; restore `requireUser({confirmedEmail})` + gates at the sell/chat actions, UploadThing middleware and sell page; restore the auth-sheet check-email state, profile banner + resend action, `/email-verified` page; swap `lib/email.ts` back to a real provider (Resend free tier, or Brevo) with its API key.
+- **Instead of:** Keeping verification behind an env flag (more moving parts than a testing pilot needs).
+- **Status:** ✅ Active — **temporary**; supersedes the email-verification parts of D-019/D-053 until full launch (D-008 Phase 2 unchanged: roster verification is still the full-launch plan)
+
 ---
 
-*Next entry: D-058.*
+*Next entry: D-060.*

@@ -18,8 +18,6 @@ export const uploadRouter = {
     .middleware(async () => {
       const current = await getCurrentUser();
       if (!current) throw new UploadThingError("Sign in to add photos");
-      if (!current.emailConfirmed)
-        throw new UploadThingError("Confirm your email to add photos");
       return { userId: current.profile.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {

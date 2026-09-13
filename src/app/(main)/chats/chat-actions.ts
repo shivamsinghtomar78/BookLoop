@@ -24,8 +24,6 @@ function mapError(err: unknown): { ok: false; error: string } {
   if (err instanceof DomainError) return { ok: false, error: err.userMessage };
   if (err instanceof Error && err.message === "UNAUTHENTICATED")
     return { ok: false, error: "Sign in to continue." };
-  if (err instanceof Error && err.message === "EMAIL_UNCONFIRMED")
-    return { ok: false, error: "Confirm your email to chat — check your inbox." };
   console.error("[chat action]", err);
   return { ok: false, error: "Something went wrong. Please try again." };
 }
@@ -34,7 +32,7 @@ export async function openChatAction(
   listingId: number,
 ): Promise<Result<{ chatId: number }>> {
   try {
-    const profile = await requireUser({ confirmedEmail: true });
+    const profile = await requireUser();
     const parsed = z.number().int().positive().safeParse(listingId);
     if (!parsed.success) return { ok: false, error: "Invalid listing" };
     const chat = await openChat(parsed.data, profile.id);
@@ -51,7 +49,7 @@ export async function sendMessageAction(
   rawBody: unknown,
 ): Promise<Result<{ id: number; at: string }>> {
   try {
-    const profile = await requireUser({ confirmedEmail: true });
+    const profile = await requireUser();
     const parsed = messageSchema.safeParse(rawBody);
     if (!parsed.success)
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid message" };

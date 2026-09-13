@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   GuestProfileButtons,
   LogoutButton,
-  ResendConfirmation,
 } from "@/components/auth/profile-actions";
 import { MyListingActions } from "@/components/sell/my-listing-row";
 import { AlertRow } from "@/components/alerts/alert-row";
@@ -86,15 +85,6 @@ export default async function ProfilePage() {
         {donations > 0 && (
           <div className="mt-3">
             <DonorShareButton count={donations} />
-          </div>
-        )}
-        {!profile.emailConfirmed && (
-          <div className="bg-surface-soft mt-4 flex flex-col items-start gap-2 rounded-lg p-3">
-            <p className="text-sm">
-              <span className="font-medium">Confirm your email</span> to list
-              books and chat.
-            </p>
-            <ResendConfirmation />
           </div>
         )}
       </section>

@@ -20,15 +20,13 @@ function mapError(err: unknown): { ok: false; error: string } {
   if (err instanceof DomainError) return { ok: false, error: err.userMessage };
   if (err instanceof Error && err.message === "UNAUTHENTICATED")
     return { ok: false, error: "Sign in to continue." };
-  if (err instanceof Error && err.message === "EMAIL_UNCONFIRMED")
-    return { ok: false, error: "Confirm your email to list books — check your inbox." };
   console.error("[sell action]", err);
   return { ok: false, error: "Something went wrong. Please try again." };
 }
 
 export async function publishListingAction(raw: unknown): Promise<PublishResult> {
   try {
-    const profile = await requireUser({ confirmedEmail: true });
+    const profile = await requireUser();
     const parsed = listingSchema.safeParse(raw);
     if (!parsed.success)
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -46,7 +44,7 @@ export async function updateListingAction(
   raw: unknown,
 ): Promise<PublishResult> {
   try {
-    const profile = await requireUser({ confirmedEmail: true });
+    const profile = await requireUser();
     const parsed = listingSchema.safeParse(raw);
     if (!parsed.success)
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
