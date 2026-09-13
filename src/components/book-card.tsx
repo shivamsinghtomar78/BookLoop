@@ -4,6 +4,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { WishlistHeart } from "@/components/wishlist-heart";
 import { CONDITIONS } from "@/lib/constants";
 
 export type BookCardData = {
@@ -27,11 +28,14 @@ function conditionLabel(value: BookCardData["condition"]) {
 export function BookCard({
   book,
   layout = "shelf",
+  saved,
 }: {
   book: BookCardData;
   /** "shelf" = fixed width inside horizontal scrollers (< md);
       "grid"  = fluid, fills its grid cell (md+ sections, results pages). */
   layout?: "shelf" | "grid";
+  /** When provided, renders the wishlist heart overlay (Task 3.4). */
+  saved?: boolean;
 }) {
   const meta =
     book.class && book.subject
@@ -63,6 +67,13 @@ export function BookCard({
           <Badge variant="secondary" className="absolute top-2 left-2">
             EXCHANGE
           </Badge>
+        )}
+        {saved !== undefined && (
+          <WishlistHeart
+            listingId={book.id}
+            initialSaved={saved}
+            className="absolute top-1 right-1"
+          />
         )}
       </div>
       <div className="mt-2 flex flex-col gap-0.5">

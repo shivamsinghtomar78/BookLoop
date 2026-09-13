@@ -12,10 +12,16 @@ import {
   ResendConfirmation,
 } from "@/components/auth/profile-actions";
 import { MyListingActions } from "@/components/sell/my-listing-row";
+import { AlertRow } from "@/components/alerts/alert-row";
+import { BookCard } from "@/components/book-card";
 import { getCurrentUser } from "@/services/users";
 import { myListings } from "@/services/listings";
+import { myWishlist } from "@/services/wishlist";
+import { myAlerts } from "@/services/alerts";
+import { recentActiveListings } from "@/db/repos/listings";
 import { getDb } from "@/db/client";
 import { listingPhotos } from "@/db/schema";
+import { CATEGORIES } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -82,13 +88,11 @@ export default async function ProfilePage() {
 
       <div className="flex flex-col gap-6">
         <MyListingsSection sellerId={profile.id} />
+        <WishlistSection userId={profile.id} userClass={profile.class} />
+        <AlertsSection userId={profile.id} />
 
         <section className="flex flex-col gap-4">
           <EmptyTab title="My Chats" hint="Chats with buyers and sellers appear here." />
-          <EmptyTab
-            title="My Wishlist"
-            hint="Save books with the heart — coming in Phase 3."
-          />
         </section>
 
         <div className="lg:hidden">
@@ -161,6 +165,108 @@ async function MyListingsSection({ sellerId }: { sellerId: number }) {
             </div>
             <MyListingActions listingId={r.id} title={r.title} status={r.status} />
           </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+async function WishlistSection({
+  userId,
+  userClass,
+}: {
+  userId: number;
+  userClass: number;
+}) {
+  const items = await myWishlist(userId);
+
+  if (items.length === 0) {
+    // Empty state → trending in the user's class (WORKFLOW.md §9)
+    const trending = (await recentActiveListings(6)).filter(
+      (b) => b.class === userClass,
+    );
+    return (
+      <section>
+        <h2 className="font-semibold">My Wishlist</h2>
+        <p className="text-subtle mt-1 text-sm">
+          Save books with the ♥ — they&apos;ll wait for you here.
+        </p>
+        {trending.length > 0 && (
+          <>
+            <p className="text-subtle mt-3 text-xs font-medium uppercase">
+              New in Class {userClass}
+            </p>
+            <div className="-mx-4 mt-2 flex gap-3 overflow-x-auto px-4 pb-1">
+              {trending.map((b) => (
+                <BookCard key={b.id} book={b} layout="shelf" />
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <h2 className="font-semibold">My Wishlist</h2>
+      <div className="mt-2 grid grid-cols-1 gap-2 xl:grid-cols-2">
+        {items.map((l) => (
+          <Link
+            key={l.id}
+            href={`/listings/${l.id}`}
+            className="flex items-center gap-3 rounded-2xl bg-card p-2.5"
+          >
+            <span className="bg-surface-soft relative size-12 shrink-0 overflow-hidden rounded-lg">
+              {l.photoUrl && (
+                <Image
+                  src={l.photoUrl}
+                  alt={l.title}
+                  fill
+                  sizes="48px"
+                  className="object-cover"
+                />
+              )}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium">{l.title}</span>
+              <span className="text-subtle block text-xs">
+                {l.mode === "sell" && l.priceInr != null && `₹${l.priceInr}`}
+                {l.mode === "donate" && "FREE"}
+                {l.mode === "exchange" && "exchange"}
+                {l.status !== "active" && ` · ${l.status}`}
+              </span>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+async function AlertsSection({ userId }: { userId: number }) {
+  const alerts = await myAlerts(userId);
+  if (alerts.length === 0) return null;
+
+  const label = (a: (typeof alerts)[number]) =>
+    [
+      a.keyword && `"${a.keyword}"`,
+      a.category && CATEGORIES.find((c) => c.value === a.category)?.label,
+      a.class && `Class ${a.class}`,
+      a.subject,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
+  return (
+    <section>
+      <h2 className="font-semibold">My Alerts</h2>
+      <p className="text-subtle mt-1 text-sm">
+        We notify you when a matching book is listed.
+      </p>
+      <div className="mt-2 flex flex-col gap-2">
+        {alerts.map((a) => (
+          <AlertRow key={a.id} alertId={a.id} label={label(a)} />
         ))}
       </div>
     </section>

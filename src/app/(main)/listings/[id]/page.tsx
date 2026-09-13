@@ -4,10 +4,15 @@
 
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq, ne, sql as dsql } from "drizzle-orm";
+import { ThumbsUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { WishlistHeart } from "@/components/wishlist-heart";
 import { getDb } from "@/db/client";
-import { listingPhotos, listings, users } from "@/db/schema";
+import { listingPhotos, listings, ratings, users } from "@/db/schema";
+import { getCurrentUser } from "@/services/users";
+import { wishlistedIds } from "@/services/wishlist";
 import { CONDITIONS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -29,14 +34,33 @@ export default async function ListingPage({
     .limit(1);
   if (!listing || listing.status === "deleted") notFound();
 
-  const [photos, [seller]] = await Promise.all([
+  const current = await getCurrentUser();
+
+  const [photos, [seller], [sellerStats], saved] = await Promise.all([
     db
       .select()
       .from(listingPhotos)
       .where(eq(listingPhotos.listingId, id))
       .orderBy(listingPhotos.sortOrder),
     db.select().from(users).where(eq(users.id, listing.sellerId)).limit(1),
+    db
+      .select({
+        thumbsUp: dsql<number>`(SELECT count(*)::int FROM ${ratings} WHERE ${ratings.rateeId} = ${listing.sellerId} AND ${ratings.thumbsUp} = true)`,
+        activeListings: dsql<number>`count(*)::int`,
+      })
+      .from(listings)
+      .where(
+        and(
+          eq(listings.sellerId, listing.sellerId),
+          ne(listings.status, "deleted"),
+        ),
+      ),
+    current
+      ? wishlistedIds(current.profile.id, [id]).then((s) => s.has(id))
+      : Promise.resolve(false),
   ]);
+
+  const isOwnListing = current?.profile.id === listing.sellerId;
 
   const conditionLabel = CONDITIONS.find(
     (c) => c.value === listing.condition,
@@ -48,20 +72,28 @@ export default async function ListingPage({
 
   return (
     <div className="mx-auto mt-4 max-w-5xl pb-8 lg:mt-8 lg:grid lg:grid-cols-2 lg:gap-10">
-      {/* Gallery: swipe strip < lg, stacked column lg+ */}
+      {/* Gallery: swipe strip < lg, stacked column lg+; wishlist heart overlays the first photo */}
       <div className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 lg:mx-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0">
-        {photos.map((p) => (
+        {photos.map((p, i) => (
           <div
             key={p.id}
             className="bg-surface-soft relative aspect-[4/3] w-[85%] shrink-0 snap-center overflow-hidden rounded-2xl lg:w-full"
           >
             <Image
               src={p.url}
-              alt={listing.title}
+              alt={`${listing.title} — photo ${i + 1}`}
               fill
               sizes="(max-width: 1024px) 85vw, 480px"
               className="object-cover"
+              priority={i === 0}
             />
+            {i === 0 && !isOwnListing && (
+              <WishlistHeart
+                listingId={listing.id}
+                initialSaved={saved}
+                className="absolute top-2 right-2"
+              />
+            )}
           </div>
         ))}
       </div>
@@ -98,16 +130,52 @@ export default async function ListingPage({
               &quot;{listing.conditionNote}&quot;
             </p>
           )}
-          <p className="text-subtle mt-2 text-xs">
-            {listing.bookloopId} · listed by {seller?.fullName ?? "a student"}
-            {seller && ` (Class ${seller.class})`}
-          </p>
+          <p className="text-subtle mt-2 text-xs">{listing.bookloopId}</p>
         </div>
 
-        <div className="bg-surface-soft rounded-lg p-3 text-center text-sm">
-          💬 Chat with the seller arrives in Phase 4 — handovers happen at the
-          school pickup point.
+        {/* Seller card — never any contact info (D-004) */}
+        <div className="flex items-center justify-between rounded-2xl bg-card p-4">
+          <div>
+            <p className="text-sm font-semibold">
+              {seller?.fullName ?? "A student"}
+            </p>
+            <p className="text-subtle text-xs">
+              {seller && `Class ${seller.class} · `}
+              {sellerStats?.activeListings ?? 0} listing
+              {(sellerStats?.activeListings ?? 0) === 1 ? "" : "s"}
+            </p>
+          </div>
+          <span className="text-subtle flex items-center gap-1 text-sm">
+            <ThumbsUp className="size-4" /> {sellerStats?.thumbsUp ?? 0}
+          </span>
         </div>
+
+        {/* Sticky chat bar: fixed above the tab bar < lg, inline in the info
+            column lg+ — the ONE green action on the page (UI_REFERENCE §3).
+            Activates in Phase 4. */}
+        {!isOwnListing && listing.status === "active" && (
+          <div className="border-hairline bg-card fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t p-3 shadow-lg md:bottom-0 lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+            <div className="mx-auto max-w-md lg:max-w-none">
+              <Button size="lg" className="w-full" disabled>
+                💬 Chat with Seller — coming in Phase 4
+              </Button>
+              <p className="text-subtle mt-1 text-center text-xs">
+                Handover happens at the school pickup point
+              </p>
+            </div>
+          </div>
+        )}
+        {listing.status === "reserved" && (
+          <div className="bg-surface-soft rounded-lg p-3 text-center text-sm">
+            This book is reserved.{" "}
+            <a
+              href={`/search?class=${listing.class ?? ""}`}
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              See similar books
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

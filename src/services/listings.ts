@@ -69,6 +69,11 @@ export async function createListing(input: ListingInput, sellerId: number) {
     ),
   ]);
 
+  // Alert matching runs synchronously after publish (D-038) but can never
+  // fail it — matchAlertsForNewListing catches its own errors.
+  const { matchAlertsForNewListing } = await import("@/services/alerts");
+  await matchAlertsForNewListing(nextId);
+
   return { id: nextId, bookloopId };
 }
 

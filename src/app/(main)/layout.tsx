@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { AuthSheetProvider } from "@/components/auth/auth-sheet";
 import { BottomNav } from "@/components/shell/bottom-nav";
+import { NotificationBell } from "@/components/shell/notification-bell";
 import { TopNav } from "@/components/shell/top-nav";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
@@ -23,7 +24,10 @@ export default function MainLayout({ children }: { children: ReactNode }) {
               Give your books a second life
             </p>
           </div>
-          <TopNav />
+          <div className="flex items-center gap-1">
+            <TopNav />
+            <NotificationBell />
+          </div>
         </div>
       </header>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-24 sm:px-6 md:pb-10 lg:px-8">
