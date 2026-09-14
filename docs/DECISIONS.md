@@ -466,6 +466,14 @@ Every decision made during development goes in this file — big or small, produ
 - **Instead of:** Keeping verification behind an env flag (more moving parts than a testing pilot needs).
 - **Status:** ✅ Active — **temporary**; supersedes the email-verification parts of D-019/D-053 until full launch (D-008 Phase 2 unchanged: roster verification is still the full-launch plan)
 
+### D-060 — Realtime socket.io runs ON Vercel (corrects D-055's hosting assumption)
+- **Date:** 2026-09-14
+- **Area:** Tech
+- **Decision:** The Socket.IO server deploys **inside the Vercel project** as a root-level vanilla function (`api/socketio.ts`) exporting an `http.Server` — the platform's documented pattern now that Vercel Functions support WebSockets on Fluid Compute. Same push-only design as before (writes in server actions → `pg_notify`; each function instance holds its own LISTEN while it has sockets, started lazily on first connection, so fan-out is correct across instances and an idle deploy holds no DB session). Client uses `transports: ["websocket"]` only (HTTP long-polling doesn't work on Vercel Functions) with `path /api/socketio/socket.io`, resolved per environment by `/api/chat-token`: explicit `NEXT_PUBLIC_REALTIME_URL` override → external host; on Vercel → same origin; locally → the standalone `realtime/server.ts` twin on :4001 (kept for `next dev`, where root `api/` functions don't run). Connections close at the function's max duration (300s) — socket.io auto-reconnect + our re-join/refetch + the D-037 polling fallback cover it. **No separate realtime host needed.**
+- **Why:** D-055's premise ("socket.io can't run on Vercel") was outdated platform knowledge, flagged by the Vercel plugin's 2026 knowledge update and confirmed against the vercel-functions docs. One deploy target instead of two, and same-origin removes the CORS surface. Verified: websocket-only client connects/joins and bad tokens are refused against the shared server logic.
+- **Instead of:** Hosting `realtime/server.ts` on Render/Railway (D-055's deployment plan — no longer necessary; still possible via the env override if ever wanted).
+- **Status:** ✅ Active (supersedes D-055's deployment note; D-055's push-only architecture unchanged)
+
 ---
 
-*Next entry: D-060.*
+*Next entry: D-061.*

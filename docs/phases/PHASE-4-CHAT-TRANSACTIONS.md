@@ -57,5 +57,5 @@
 - [x] Polling economics: polling fully pauses while the socket is live; fallback stays within ARCHITECTURE.md §6 budgets
 - [x] Decisions logged: D-055 (socket.io realtime, supersedes half of D-022)
 
-### Realtime deployment note
-`realtime/server.ts` needs an always-on Node host in production (Render/Railway/…): set `DATABASE_URL(_UNPOOLED)`, `CHAT_JWT_SECRET`, `BETTER_AUTH_URL` (CORS origin), and point the app's `NEXT_PUBLIC_REALTIME_URL` at it. Until then, production chat runs on the polling fallback — fully functional, just not instant.
+### Realtime deployment note *(updated by D-060)*
+Realtime now deploys **with the app on Vercel**: `api/socketio.ts` is a vanilla Vercel Function exporting the Socket.IO `http.Server` (Vercel Functions support WebSockets on Fluid Compute). Same-origin, no extra host, no CORS. `realtime/server.ts` remains the local-dev twin (`npm run realtime`, :4001) since root `api/` functions don't run under `next dev`; `NEXT_PUBLIC_REALTIME_URL` stays as an optional external-host override. The D-037 polling fallback still covers any socket gap.

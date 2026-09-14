@@ -20,8 +20,15 @@ export async function GET() {
     .setExpirationTime("5m")
     .sign(new TextEncoder().encode(secret));
 
-  return Response.json({
-    token,
-    url: process.env.NEXT_PUBLIC_REALTIME_URL ?? "http://localhost:4001",
-  });
+  // Where the socket.io server lives (D-060):
+  // - explicit NEXT_PUBLIC_REALTIME_URL override wins (external host)
+  // - on Vercel: same origin, served by the api/socketio.ts function
+  // - local dev: the standalone realtime/server.ts on :4001
+  const target = process.env.NEXT_PUBLIC_REALTIME_URL
+    ? { url: process.env.NEXT_PUBLIC_REALTIME_URL, path: "/socket.io" }
+    : process.env.VERCEL
+      ? { url: "", path: "/api/socketio/socket.io" } // "" = same origin
+      : { url: "http://localhost:4001", path: "/socket.io" };
+
+  return Response.json({ token, ...target });
 }

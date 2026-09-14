@@ -96,14 +96,23 @@ export function ChatScreen(props: {
       try {
         const res = await fetch("/api/chat-token");
         if (!res.ok) return; // realtime disabled → polling only
-        const { token, url } = (await res.json()) as { token: string; url: string };
+        const { token, url, path } = (await res.json()) as {
+          token: string;
+          url: string;
+          path: string;
+        };
         if (cancelled) return;
 
-        const socket = io(url, {
+        const opts = {
+          path,
           auth: { token },
-          transports: ["websocket", "polling"],
+          // websocket transport only — HTTP long-polling doesn't work on
+          // Vercel Functions (D-060), and we have our own REST fallback anyway
+          transports: ["websocket"],
           reconnectionDelayMax: 15_000,
-        });
+        };
+        // "" = same origin (Vercel); explicit URL otherwise (local dev / external host)
+        const socket = url ? io(url, opts) : io(opts);
         socketRef.current = socket;
 
         socket.on("connect", () => {
