@@ -52,7 +52,7 @@
 ## Task 0.8 — Health check & env docs
 - [x] `GET /api/health` → `SELECT 1` → `{ ok: true, db: true }`, 503 `{ok:false}` on DB failure (graceful, no crash)
 - [x] `.env.example` with every var from `TECH.md` §4 *(Neon CLI additionally manages `.env.local` — gitignored)*
-- [ ] 🧪 **Test:** `/api/health` returns ok **on production** ⏳ after Vercel · local ok verified ✓
+- [x] 🧪 **Test:** `/api/health` on production (`bookloop-tan.vercel.app`) → `{ok:true, db:true}` ✓ (14 Sep 2026)
 
 ---
 

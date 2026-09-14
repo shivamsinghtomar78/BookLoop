@@ -8,6 +8,7 @@ config({ path: [".env.local", ".env"] });
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
+import { altPhotoFor, photoFor } from "./seed-photos";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -27,8 +28,6 @@ if (looksLikeProd && process.env.SEED_PROD_OK !== "yes") {
 
 const db = drizzle(neon(url), { schema });
 
-const PLACEHOLDER = (seed: string) =>
-  `https://picsum.photos/seed/${seed}/600/450`;
 
 async function main() {
   console.log("Seeding BookLoop dev data…");
@@ -105,9 +104,10 @@ async function main() {
       .insert(schema.listings)
       .values({ ...row, bookloopId: `BL-${String(i + 1).padStart(4, "0")}` })
       .returning();
+    // Real book photos, category-appropriate, deterministic per index
     await db.insert(schema.listingPhotos).values([
-      { listingId: inserted.id, url: PLACEHOLDER(`book${i + 1}a`), sortOrder: 1 },
-      { listingId: inserted.id, url: PLACEHOLDER(`book${i + 1}b`), sortOrder: 2 },
+      { listingId: inserted.id, url: photoFor(row.category, i), sortOrder: 1 },
+      { listingId: inserted.id, url: altPhotoFor(row.category, i), sortOrder: 2 },
     ]);
   }
 

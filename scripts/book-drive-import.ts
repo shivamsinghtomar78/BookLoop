@@ -15,6 +15,7 @@ config({ path: [".env.local", ".env"] });
 
 import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
+import { photoFor } from "../src/db/seed-photos";
 
 const DRIVE_EMAIL = "bookdrive@school.local";
 
@@ -71,9 +72,9 @@ async function main() {
       mode: (r.mode || "sell") as "sell" | "exchange" | "donate",
       condition: (r.condition || "good") as "like_new" | "good" | "fair" | "worn",
       conditionNote: "",
-      photos: [
-        r.photo_url || `https://picsum.photos/seed/drive${i}/600/450`,
-      ],
+      // Real photos strongly preferred (the photo IS the listing) —
+      // fallback is a real book photo from the verified pool, not a placeholder.
+      photos: [r.photo_url || photoFor(r.category || "generic", i)],
       class: r.class ? Number(r.class) : null,
       subject: r.subject || "",
       exam: r.exam || "",
