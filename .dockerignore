@@ -21,6 +21,8 @@ vibe_images
 artifacts
 playwright-report
 test-results
+# Local CLI state (agent session tokens)
+.insta
 docs
 README.md
 # scripts/ stays in the context: src/db/seed.ts imports scripts/lib/test-db.mjs
