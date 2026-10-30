@@ -22,15 +22,35 @@ const MAX_PER_DAY = Number(process.env.PHOTO_DAILY_LIMIT) || 40;
 const ACCEPTED = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function POST(req: Request) {
+  // Same-origin guard: compare the Origin host with every host we can be
+  // reached under. Managed platforms terminate TLS and rewrite Host, so the
+  // request host alone is not enough — the configured public URL must count.
   const origin = req.headers.get("origin");
   if (origin) {
-    let sameOrigin = false;
+    let originHost: string;
     try {
-      sameOrigin = new URL(origin).host === req.headers.get("host");
+      originHost = new URL(origin).host;
     } catch {
-      sameOrigin = false;
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
-    if (!sameOrigin) return Response.json({ error: "Forbidden" }, { status: 403 });
+    const hosts = new Set<string>();
+    for (const h of [
+      req.headers.get("x-forwarded-host")?.split(",")[0]?.trim(),
+      req.headers.get("host"),
+    ]) {
+      if (h) hosts.add(h);
+    }
+    try {
+      if (process.env.BETTER_AUTH_URL) hosts.add(new URL(process.env.BETTER_AUTH_URL).host);
+      for (const o of (process.env.APP_ORIGINS ?? "").split(",")) {
+        if (o.trim()) hosts.add(new URL(o.trim()).host);
+      }
+    } catch {
+      /* malformed config — fall back to the request hosts above */
+    }
+    if (!hosts.has(originHost)) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   const current = await getCurrentUser();
