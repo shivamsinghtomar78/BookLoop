@@ -7,8 +7,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 
-export function NotificationBell() {
+export function NotificationBell({ dark = false }: { dark?: boolean }) {
   const { data: session } = useSession();
   const [unread, setUnread] = useState(0);
 
@@ -38,18 +39,29 @@ export function NotificationBell() {
   if (!session) return null;
 
   return (
-    <Link
-      href="/notifications"
-      aria-label={unread > 0 ? `Notifications (${unread} unread)` : "Notifications"}
-      className="text-muted-foreground hover:text-foreground relative flex size-11 items-center justify-center rounded-lg transition md:size-9"
-      onClick={() => setUnread(0)}
-    >
-      <Bell className="size-5" />
+    <div className="relative">
+      <Link
+        href="/notifications"
+        aria-label={unread > 0 ? `Notifications (${unread} unread)` : "Notifications"}
+        className={cn(
+          "flex size-11 items-center justify-center rounded-full transition md:size-9",
+          dark
+            ? "text-white/65 hover:bg-white/10 hover:text-white"
+            : "text-muted-foreground hover:bg-surface-soft hover:text-foreground",
+        )}
+        onClick={() => setUnread(0)}
+      >
+        <Bell className="size-5" />
+      </Link>
+      {/* Badge sits outside the link so the link keeps a clean text alternative. */}
       {unread > 0 && (
-        <span className="bg-primary text-primary-foreground absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold">
+        <span
+          aria-hidden="true"
+          className="bg-primary text-primary-foreground pointer-events-none absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+        >
           {unread > 9 ? "9+" : unread}
         </span>
       )}
-    </Link>
+    </div>
   );
 }

@@ -88,7 +88,11 @@ export function AuthSheetProvider({ children }: { children: ReactNode }) {
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-sm text-destructive">{message}</p>;
+  return (
+    <p role="alert" className="text-sm text-destructive">
+      {message}
+    </p>
+  );
 }
 
 function SignupForm({
