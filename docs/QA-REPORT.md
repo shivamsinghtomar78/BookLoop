@@ -75,6 +75,12 @@ See `tests/README.md` (DB container, seed, build, `npm run test:qa`).
 Results: `artifacts/playwright/results.json`, HTML report in
 `playwright-report/`.
 
+Image check: `docker build -t bookloop-web:qa --target runner .`, then run it
+with the QA database (`host.docker.internal:55432`) on port 3103 and run
+`QA_BASE_URL=http://localhost:3103 npx playwright test
+--project=chromium-390x844 browse.spec.ts search.spec.ts listing.spec.ts
+sell.spec.ts` — 19/19 passed, including the upload path.
+
 ---
 
 ## 5. Measurements
@@ -104,11 +110,30 @@ build measures the app, not sharp's first pass.
 
 ## 6. Pre-deploy checklist (InstaCloud)
 
-- [ ] `BETTER_AUTH_URL` / `NEXT_PUBLIC_APP_URL` set to the public web URL
-- [ ] `APP_ORIGINS` includes the realtime host if it ever calls the app API
-- [ ] `BETTER_AUTH_SECRET`, `CHAT_JWT_SECRET` unchanged and present
-- [ ] `NEXT_PUBLIC_REALTIME_URL` matches the realtime compute URL
-- [ ] No `UPLOADTHING_TOKEN` required — uploads now run on the DB fallback
-- [ ] `photo_blobs` auto-creates on first upload; confirm one upload after deploy
-- [ ] `npm run test:qa` green against the deployed URL with a staging database
+Deployed 2026-10-31 to `web` and `realtime` on `main`; verified after deploy:
+`/`, `/privacy`, `/terms`, `/robots.txt`, `/sitemap.xml` return 200; `/sell`
+redirects guests; `POST /api/photos` returns 401 for guests (the route is live on
+the DB-backed upload path, no UploadThing token involved) and 403 for foreign
+origins; the realtime service serves `/api/health` and its socket.io handshake
+echoes only the web origin.
+
+- [x] `BETTER_AUTH_URL` set to the public web URL (canonical/robots/sitemap emit
+      it; `NEXT_PUBLIC_APP_URL` is unset on purpose — those readers fall back to
+      `BETTER_AUTH_URL`, see `src/app/layout.tsx:28`)
+- [x] Realtime CORS allowlist accepts the web origin and rejects a foreign one —
+      the CORS allowlist is `BETTER_AUTH_URL` + `APP_ORIGINS`
+      (`realtime/server.ts:21`), so both reach the container
+- [x] `BETTER_AUTH_SECRET`, `CHAT_JWT_SECRET` unchanged and present
+- [x] `NEXT_PUBLIC_REALTIME_URL` present; realtime service answers `/api/health`
+      and completes a socket.io polling handshake
+- [x] No `UPLOADTHING_TOKEN` required — uploads now run on the DB fallback
+- [ ] `photo_blobs` auto-creates on first upload; confirm one real upload after deploy
+- [x] `npm run test:qa` green locally (398 tests) and against the Docker image
 - [ ] Send a test sign-up + listing + chat from a real phone on mobile data
+
+Two lines stay unchecked because they need a real account on production: an
+authenticated upload and a live chat socket. The safety rule for this QA pass
+forbids writing test listings to the live Neon branch, so both were proven
+locally and in the Docker image (publish → WebP → `/api/photos/<id>`; chat token
+→ socket handshake → message echo) instead of against prod. Do them once from a
+phone with a real student account, or point the suite at a Neon test branch.

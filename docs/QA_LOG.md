@@ -85,6 +85,24 @@ was found, what changed, and how it was verified.
     cache, so the first Chromium project paid sharp re-encoding for every hero
     image and missed 30 s navigation budgets. Global setup now warms the public
     routes before workers start.
+19. **Platform-rewritten Host broke uploads in production.** After deploying
+    the upload fix, `POST /api/photos` with the public `Origin` returned
+    `403 Forbidden`: InstaCloud terminates TLS and rewrites the `Host` header,
+    so `Origin.host === req.headers.host` was never true. The guard now also
+    accepts `x-forwarded-host`, `BETTER_AUTH_URL`, and `APP_ORIGINS`.
+    Verified after redeploy: guest → 401 ("Sign in to add photos"), foreign
+    origin → 403. This would have made the original upload bug look fixed in
+    code review while still failing for every real student.
+20. **Production env checked by name, not assumed.** `insta secrets list`
+    shows project-wide `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`,
+    `CHAT_JWT_SECRET`, `DATABASE_URL`, `DATABASE_URL_UNPOOLED`,
+    `NEXT_PUBLIC_REALTIME_URL` — and no `NEXT_PUBLIC_APP_URL`. That is fine:
+    `layout.tsx`, `robots.ts` and `sitemap.ts` fall back to `BETTER_AUTH_URL`,
+    and the deployed HTML emits the public URL with zero `localhost` refs.
+    Realtime CORS echoes the web origin and sends no ACAO header to a foreign
+    origin, which proves `BETTER_AUTH_URL` reaches that container too. The
+    earlier checklist entry claiming `NEXT_PUBLIC_APP_URL` was set is corrected
+    rather than silently left as a false green tick.
 
 ## Known, deliberately deferred
 
