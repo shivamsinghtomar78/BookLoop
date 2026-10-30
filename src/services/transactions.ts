@@ -7,7 +7,8 @@
 
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { listings, notifications, ratings, transactions, users } from "@/db/schema";
+import { atomically } from "@/db/atomic";
+import { listings, notifications, ratings, transactions } from "@/db/schema";
 import { DomainError } from "@/services/listings";
 import { getChatForUser } from "@/services/chat";
 import { sendEmail } from "@/lib/email";
@@ -41,20 +42,27 @@ export async function reserveForBuyer(chatId: number, sellerId: number) {
     throw new DomainError("This listing isn't available to reserve.");
 
   const db = getDb();
+  const txValues = {
+    listingId: ctx.listing.id,
+    sellerId,
+    buyerId: ctx.chat.buyerId,
+    mode: ctx.listing.mode,
+    priceInr: ctx.listing.priceInr,
+  };
+  const reserved = { status: "reserved" as const, updatedAt: new Date() };
+  const guard = and(eq(listings.id, ctx.listing.id), eq(listings.status, "active"));
   try {
-    await db.batch([
-      db.insert(transactions).values({
-        listingId: ctx.listing.id,
-        sellerId,
-        buyerId: ctx.chat.buyerId,
-        mode: ctx.listing.mode,
-        priceInr: ctx.listing.priceInr,
-      }),
-      db
-        .update(listings)
-        .set({ status: "reserved", updatedAt: new Date() })
-        .where(and(eq(listings.id, ctx.listing.id), eq(listings.status, "active"))),
-    ]);
+    await atomically(
+      db,
+      [
+        db.insert(transactions).values(txValues),
+        db.update(listings).set(reserved).where(guard),
+      ],
+      async (tx) => {
+        await tx.insert(transactions).values(txValues);
+        await tx.update(listings).set(reserved).where(guard);
+      },
+    );
   } catch {
     // UNIQUE listing_id lost the race — someone already reserved it.
     throw new DomainError("This book was just reserved.");
@@ -80,13 +88,18 @@ export async function cancelReservation(chatId: number, userId: number) {
     throw new DomainError("This handover is already confirmed.");
 
   const db = getDb();
-  await db.batch([
-    db.delete(transactions).where(eq(transactions.id, tx.id)),
-    db
-      .update(listings)
-      .set({ status: "active", updatedAt: new Date() })
-      .where(eq(listings.id, ctx.listing.id)),
-  ]);
+  const released = { status: "active" as const, updatedAt: new Date() };
+  await atomically(
+    db,
+    [
+      db.delete(transactions).where(eq(transactions.id, tx.id)),
+      db.update(listings).set(released).where(eq(listings.id, ctx.listing.id)),
+    ],
+    async (t) => {
+      await t.delete(transactions).where(eq(transactions.id, tx.id));
+      await t.update(listings).set(released).where(eq(listings.id, ctx.listing.id));
+    },
+  );
 
   const otherId = userId === tx.buyerId ? tx.sellerId : tx.buyerId;
   await db.insert(notifications).values({
@@ -131,16 +144,24 @@ export async function confirmReceived(chatId: number, buyerId: number) {
   if (tx.buyerConfirmedAt) throw new DomainError("Already confirmed — thanks!");
 
   const db = getDb();
-  await db.batch([
-    db
-      .update(transactions)
-      .set({ buyerConfirmedAt: new Date() })
-      .where(eq(transactions.id, tx.id)),
-    db
-      .update(listings)
-      .set({ status: "closed", updatedAt: new Date() })
-      .where(eq(listings.id, ctx.listing.id)),
-  ]);
+  const confirmedAt = new Date();
+  await atomically(
+    db,
+    [
+      db.update(transactions).set({ buyerConfirmedAt: confirmedAt }).where(eq(transactions.id, tx.id)),
+      db
+        .update(listings)
+        .set({ status: "closed", updatedAt: confirmedAt })
+        .where(eq(listings.id, ctx.listing.id)),
+    ],
+    async (t) => {
+      await t.update(transactions).set({ buyerConfirmedAt: confirmedAt }).where(eq(transactions.id, tx.id));
+      await t
+        .update(listings)
+        .set({ status: "closed", updatedAt: confirmedAt })
+        .where(eq(listings.id, ctx.listing.id));
+    },
+  );
 
   // Rate-now nudges, both sides (in-app + best-effort email)
   await db.insert(notifications).values([
@@ -208,13 +229,18 @@ export async function expireStaleReservation(listingId: number) {
       .limit(1);
     if (!listing || listing.status !== "reserved") return false;
 
-    await db.batch([
-      db.delete(transactions).where(eq(transactions.id, tx.id)),
-      db
-        .update(listings)
-        .set({ status: "active", updatedAt: new Date() })
-        .where(eq(listings.id, listingId)),
-    ]);
+    const released = { status: "active" as const, updatedAt: new Date() };
+    await atomically(
+      db,
+      [
+        db.delete(transactions).where(eq(transactions.id, tx.id)),
+        db.update(listings).set(released).where(eq(listings.id, listingId)),
+      ],
+      async (t) => {
+        await t.delete(transactions).where(eq(transactions.id, tx.id));
+        await t.update(listings).set(released).where(eq(listings.id, listingId));
+      },
+    );
     await db.insert(notifications).values(
       [tx.buyerId, tx.sellerId].map((userId) => ({
         userId,

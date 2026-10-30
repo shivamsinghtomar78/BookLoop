@@ -61,7 +61,15 @@ export const listingSchema = z
     }),
     conditionNote: z.string().trim().max(300).optional().or(z.literal("")),
     photos: z
-      .array(z.string().url())
+      .array(
+        z
+          .string()
+          .max(2048)
+          .refine(
+            (v) => /^https?:\/\/\S+$/i.test(v) || /^\/api\/photos\/[0-9a-f-]{36}$/i.test(v),
+            "Invalid photo URL",
+          ),
+      )
       .min(1, "Add at least one photo")
       .max(4, "Maximum 4 photos"),
     class: z.number().int().min(1).max(12).nullable().optional(),

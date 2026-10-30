@@ -2,7 +2,7 @@
 // new listings against active alerts on publish (synchronous — D-038).
 // In-app notification row is the source of truth; email is best-effort.
 
-import { and, desc, eq, ilike, ne, sql as dsql } from "drizzle-orm";
+import { and, desc, eq, ne, sql as dsql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { bookAlerts, listings, notifications, users } from "@/db/schema";
 import { DomainError } from "@/services/listings";

@@ -4,6 +4,7 @@
 
 import { and, eq, ne, sql as dsql } from "drizzle-orm";
 import { getDb } from "@/db/client";
+import { atomically } from "@/db/atomic";
 import { listingPhotos, listings } from "@/db/schema";
 import { BOOKLOOP_ID_PREFIX, LIMITS } from "@/lib/constants";
 import type { ListingInput } from "@/lib/zod-schemas";
@@ -63,17 +64,21 @@ export async function createListing(
   ).then((r) => r.rows as { nextId: number }[]);
 
   const bookloopId = `${BOOKLOOP_ID_PREFIX}${String(nextId).padStart(4, "0")}`;
+  const listingValues = { ...toRow(input, sellerId), id: nextId, bookloopId };
+  const photoValues = input.photos.map((url, i) => ({
+    listingId: nextId,
+    url,
+    sortOrder: i + 1,
+  }));
 
-  await db.batch([
-    db.insert(listings).values({ ...toRow(input, sellerId), id: nextId, bookloopId }),
-    db.insert(listingPhotos).values(
-      input.photos.map((url, i) => ({
-        listingId: nextId,
-        url,
-        sortOrder: i + 1,
-      })),
-    ),
-  ]);
+  await atomically(
+    db,
+    [db.insert(listings).values(listingValues), db.insert(listingPhotos).values(photoValues)],
+    async (tx) => {
+      await tx.insert(listings).values(listingValues);
+      await tx.insert(listingPhotos).values(photoValues);
+    },
+  );
 
   // Alert matching runs synchronously after publish (D-038) but can never
   // fail it — matchAlertsForNewListing catches its own errors.
@@ -107,26 +112,36 @@ export async function updateListing(
   if (existing.status !== "active")
     throw new DomainError("Only active listings can be edited.");
 
-  await db.batch([
-    db
-      .update(listings)
-      .set({ ...toRow(input, sellerId), updatedAt: new Date() })
-      .where(eq(listings.id, listingId)),
-    db.delete(listingPhotos).where(eq(listingPhotos.listingId, listingId)),
-    db.insert(listingPhotos).values(
-      input.photos.map((url, i) => ({
-        listingId,
-        url,
-        sortOrder: i + 1,
-      })),
-    ),
-  ]);
+  const photoValues = input.photos.map((url, i) => ({
+    listingId,
+    url,
+    sortOrder: i + 1,
+  }));
+  const updated = { ...toRow(input, sellerId), updatedAt: new Date() };
+
+  await atomically(
+    db,
+    [
+      db.update(listings).set(updated).where(eq(listings.id, listingId)),
+      db.delete(listingPhotos).where(eq(listingPhotos.listingId, listingId)),
+      db.insert(listingPhotos).values(photoValues),
+    ],
+    async (tx) => {
+      await tx.update(listings).set(updated).where(eq(listings.id, listingId));
+      await tx.delete(listingPhotos).where(eq(listingPhotos.listingId, listingId));
+      await tx.insert(listingPhotos).values(photoValues);
+    },
+  );
   return { id: listingId, bookloopId: existing.bookloopId };
 }
 
 export async function deleteListing(listingId: number, sellerId: number) {
   const db = getDb();
-  await ownedListing(listingId, sellerId);
+  const existing = await ownedListing(listingId, sellerId);
+  if (existing.status === "reserved")
+    throw new DomainError(
+      "This book is reserved for a buyer — cancel the reservation in chat first.",
+    );
   await db
     .update(listings)
     .set({ status: "deleted", updatedAt: new Date() })

@@ -109,9 +109,26 @@ export const listingPhotos = pgTable("listing_photos", {
   listingId: integer("listing_id")
     .notNull()
     .references(() => listings.id, { onDelete: "cascade" }),
-  url: text("url").notNull(), // UploadThing URL — never binary in DB
+  url: text("url").notNull(), // UploadThing URL or /api/photos/<uuid>
   sortOrder: integer("sort_order").notNull().default(1),
 });
+
+// Zero-config upload fallback: a downscaled WebP per photo, served from
+// /api/photos/<id>. Used when UPLOADTHING_TOKEN is absent so publishing never
+// depends on an external account. Rows are owned by the uploader.
+export const photoBlobs = pgTable(
+  "photo_blobs",
+  {
+    id: text("id").primaryKey(),
+    ownerId: integer("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    mime: text("mime").notNull(),
+    data: text("data").notNull(), // base64-encoded WebP
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("photo_blobs_owner_idx").on(t.ownerId, t.createdAt)],
+);
 
 // ---------- Chat ----------
 

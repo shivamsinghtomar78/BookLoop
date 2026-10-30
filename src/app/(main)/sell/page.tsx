@@ -59,6 +59,7 @@ export default async function SellPage({
       sellerClass={current.profile.class}
       edit={editProps}
       presetMode={presetMode}
+      uploadMode={process.env.UPLOADTHING_TOKEN ? "uploadthing" : "local"}
     />
   );
 }

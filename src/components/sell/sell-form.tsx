@@ -5,11 +5,10 @@
 // Sell/Exchange/Donate toggle, price nudge, preview → publish → success,
 // localStorage draft with resume.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import QRCode from "qrcode";
 import { toast } from "sonner";
@@ -43,14 +42,16 @@ export function SellForm({
   sellerClass,
   edit,
   presetMode,
+  uploadMode,
 }: {
   sellerClass: number;
   edit?: { id: number; values: ListingInput };
   presetMode?: "sell" | "exchange" | "donate";
+  uploadMode: "uploadthing" | "local";
 }) {
-  const router = useRouter();
   const [step, setStep] = useState<Step>("form");
   const [hadDraft, setHadDraft] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const form = useForm<ListingInput>({
     resolver: zodResolver(listingSchema),
@@ -63,7 +64,7 @@ export function SellForm({
     },
   });
 
-  const values = form.watch();
+  const values = useWatch({ control: form.control }) as ListingInput;
 
   // ---- Draft: autosave + resume (Task 2.8; new listings only) ----
   useEffect(() => {
@@ -73,6 +74,8 @@ export function SellForm({
       if (raw) {
         const draft = JSON.parse(raw) as ListingInput;
         form.reset({ ...draft, photos: draft.photos ?? [] });
+        // One-time hydration from localStorage — the banner mirror of that sync.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setHadDraft(true);
       }
     } catch {
@@ -90,6 +93,13 @@ export function SellForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(values), step]);
+
+  // Marks the form interactive only after the draft-resume effect above has
+  // settled, so automation never types into inputs React is about to reset.
+  // See tests/e2e/sell.spec.ts.
+  useEffect(() => {
+    formRef.current?.setAttribute("data-ready", "1");
+  }, []);
 
   const { errors, isSubmitting } = form.formState;
   const cat = values.category;
@@ -134,6 +144,7 @@ export function SellForm({
 
   return (
     <form
+      ref={formRef}
       onSubmit={form.handleSubmit(() => setStep("preview"))}
       className="mx-auto mt-4 flex w-full max-w-md flex-col gap-5 pb-8 md:mt-8 md:max-w-2xl"
       noValidate
@@ -149,6 +160,7 @@ export function SellForm({
       <PhotoUploader
         photos={values.photos}
         onChange={(p) => form.setValue("photos", p, { shouldValidate: true })}
+        mode={uploadMode}
       />
       <FieldError message={errors.photos?.message} />
 
@@ -353,7 +365,11 @@ function Chip({
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-destructive text-sm">{message}</p>;
+  return (
+    <p role="alert" className="text-destructive text-sm">
+      {message}
+    </p>
+  );
 }
 
 function PreviewView({
