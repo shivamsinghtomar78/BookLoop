@@ -443,6 +443,10 @@ async function seed() {
           mode: row.mode,
           price_inr: row.mode === "sell" ? row.price ?? null : null,
           seller_marked_at: c.state === "completed" ? minutesAgo(2950) : minutesAgo(165),
+          buyer_accepted_at:
+            c.state === "completed" ? minutesAgo(2920) : minutesAgo(160),
+          seller_handed_over_at:
+            c.state === "completed" ? minutesAgo(2900) : null,
           buyer_confirmed_at: c.state === "completed" ? minutesAgo(2890) : null,
         };
       });
@@ -450,12 +454,14 @@ async function seed() {
       client,
       `insert into transactions
          (listing_id, seller_id, buyer_id, mode, price_inr, seller_marked_at,
-          buyer_confirmed_at)
+          buyer_accepted_at, seller_handed_over_at, buyer_confirmed_at)
        select listing_id, seller_id, buyer_id, mode::mode, price_inr,
-              seller_marked_at, buyer_confirmed_at
+              seller_marked_at, buyer_accepted_at, seller_handed_over_at,
+              buyer_confirmed_at
          from json_to_recordset($1::json) as x(
            listing_id int, seller_id int, buyer_id int, mode text, price_inr int,
-           seller_marked_at timestamptz, buyer_confirmed_at timestamptz)
+           seller_marked_at timestamptz, buyer_accepted_at timestamptz,
+           seller_handed_over_at timestamptz, buyer_confirmed_at timestamptz)
        returning id, listing_id`,
       transactionSeeds,
     );

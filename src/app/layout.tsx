@@ -8,6 +8,8 @@ export const viewport: Viewport = {
   themeColor: "#0e9f6e",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 // One typeface, weight-only hierarchy — UI_REFERENCE.md §2 (D-047)

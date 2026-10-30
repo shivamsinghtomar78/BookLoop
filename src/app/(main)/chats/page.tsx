@@ -1,10 +1,10 @@
 // Chats tab (Task 4.8): conversation list, both roles, unread dots.
 
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/services/users";
 import { listMyChats } from "@/services/chat";
+import { ChatList } from "@/components/chat/chat-list";
 
 export const dynamic = "force-dynamic";
 
@@ -31,44 +31,9 @@ export default async function ChatsPage() {
           </Link>
         </div>
       ) : (
-        <ul className="mt-4 flex flex-col gap-2">
-          {rows.map((c) => (
-            <li key={c.chatId}>
-              <Link
-                href={`/chats/${c.chatId}`}
-                className="flex items-center gap-3 rounded-2xl bg-card p-3"
-              >
-                <span className="bg-surface-soft relative size-12 shrink-0 overflow-hidden rounded-lg">
-                  {c.photoUrl && (
-                    <Image src={c.photoUrl} alt={c.title} fill sizes="48px" className="object-cover" />
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5">
-                    <span className="truncate text-sm font-medium">{c.title}</span>
-                    {c.status !== "active" && (
-                      <span className="text-subtle shrink-0 text-[10px] uppercase">
-                        {c.status}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className={
-                      "block truncate text-xs " +
-                      (c.unread ? "text-foreground font-medium" : "text-subtle")
-                    }
-                  >
-                    {c.otherName}
-                    {c.lastMessage ? `: ${c.lastMessage}` : " — say hi!"}
-                  </span>
-                </span>
-                {c.unread && (
-                  <span className="bg-primary size-2.5 shrink-0 rounded-full" aria-label="Unread messages" />
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-4">
+          <ChatList rows={rows} />
+        </div>
       )}
     </div>
   );

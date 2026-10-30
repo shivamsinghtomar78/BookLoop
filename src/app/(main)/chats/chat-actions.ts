@@ -10,9 +10,10 @@ import { requireUser } from "@/services/users";
 import { DomainError } from "@/services/listings";
 import { openChat, sendMessage } from "@/services/chat";
 import {
-  askBuyerToConfirm,
+  acceptReservation,
   cancelReservation,
   confirmReceived,
+  markHandedOver,
   rateTransaction,
   reserveForBuyer,
 } from "@/services/transactions";
@@ -95,8 +96,12 @@ export async function cancelReservationAction(chatId: number) {
   return stateAction(chatId, cancelReservation);
 }
 
-export async function askConfirmAction(chatId: number) {
-  return stateAction(chatId, askBuyerToConfirm);
+export async function acceptReservationAction(chatId: number) {
+  return stateAction(chatId, acceptReservation);
+}
+
+export async function handoverAction(chatId: number) {
+  return stateAction(chatId, markHandedOver);
 }
 
 export async function confirmReceivedAction(chatId: number) {

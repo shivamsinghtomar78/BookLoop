@@ -17,6 +17,10 @@ vibe_images
 *.webp
 !public/**/*.webp
 !public/**/*.png
+# QA output — never part of the image
+artifacts
+playwright-report
+test-results
 docs
 README.md
 # scripts/ stays in the context: src/db/seed.ts imports scripts/lib/test-db.mjs

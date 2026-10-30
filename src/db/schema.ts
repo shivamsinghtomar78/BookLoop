@@ -179,7 +179,9 @@ export const transactions = pgTable("transactions", {
     .references(() => users.id),
   mode: modeEnum("mode").notNull(),
   priceInr: integer("price_inr"),
-  sellerMarkedAt: timestamp("seller_marked_at").notNull().defaultNow(),
+  sellerMarkedAt: timestamp("seller_marked_at").notNull().defaultNow(), // reserved
+  buyerAcceptedAt: timestamp("buyer_accepted_at"), // NULL until buyer accepts
+  sellerHandedOverAt: timestamp("seller_handed_over_at"), // NULL until handover
   buyerConfirmedAt: timestamp("buyer_confirmed_at"), // NULL until buyer confirms
 });
 

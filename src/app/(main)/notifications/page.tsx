@@ -53,7 +53,9 @@ export default async function NotificationsPage() {
             );
             const target =
               n.type === "chat_message" || n.type === "confirm_handover"
-                ? "/chats"
+                ? n.chatId
+                  ? `/chats/${n.chatId}`
+                  : "/chats"
                 : n.listingId
                   ? `/listings/${n.listingId}`
                   : null;

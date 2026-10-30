@@ -1,11 +1,19 @@
 // Chat page — server wrapper: participant check, lazy 72h expiry, marks the
-// chat's notifications read, hands initial data to the client ChatScreen.
+// chat's notifications read, hands initial data to the client ChatScreen. Lives
+// in its own route group so the thread can fill the screen (mobile) and show a
+// conversation list beside it (desktop).
 
 import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { ChatScreen } from "@/components/chat/chat-screen";
+import { ChatShell } from "@/components/chat/chat-shell";
 import { getCurrentUser } from "@/services/users";
-import { getChatForUser, markChatRead, messagesAfter } from "@/services/chat";
+import {
+  getChatForUser,
+  listMyChats,
+  markChatRead,
+  messagesAfter,
+} from "@/services/chat";
 import { expireStaleReservation, getTxState } from "@/services/transactions";
 import { DomainError } from "@/services/listings";
 import { getDb } from "@/db/client";
@@ -58,29 +66,32 @@ export default async function ChatPage({
     if (err instanceof DomainError) notFound();
     throw err;
   }
+  const chats = await listMyChats(current.profile.id);
 
   const { ctx, msgs, state, photoUrl } = data;
 
   return (
-    <ChatScreen
-      chatId={chatId}
-      meId={current.profile.id}
-      role={ctx.role}
-      otherName={ctx.role === "buyer" ? ctx.seller.fullName : ctx.buyer.fullName}
-      listing={{
-        id: ctx.listing.id,
-        title: ctx.listing.title,
-        priceInr: ctx.listing.priceInr,
-        mode: ctx.listing.mode,
-        photoUrl,
-      }}
-      initialMessages={msgs.map((m) => ({
-        id: m.id,
-        senderId: m.senderId,
-        body: m.body,
-        at: m.createdAt.toISOString(),
-      }))}
-      initialState={state}
-    />
+    <ChatShell chats={chats} activeChatId={chatId}>
+      <ChatScreen
+        chatId={chatId}
+        meId={current.profile.id}
+        role={ctx.role}
+        otherName={ctx.role === "buyer" ? ctx.seller.fullName : ctx.buyer.fullName}
+        listing={{
+          id: ctx.listing.id,
+          title: ctx.listing.title,
+          priceInr: ctx.listing.priceInr,
+          mode: ctx.listing.mode,
+          photoUrl,
+        }}
+        initialMessages={msgs.map((m) => ({
+          id: m.id,
+          senderId: m.senderId,
+          body: m.body,
+          at: m.createdAt.toISOString(),
+        }))}
+        initialState={state}
+      />
+    </ChatShell>
   );
 }
