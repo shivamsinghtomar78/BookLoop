@@ -18,10 +18,19 @@ config({ path: [".env.local", ".env"] });
 const PORT = Number(process.env.REALTIME_PORT ?? 4001);
 const SECRET = process.env.CHAT_JWT_SECRET;
 const DB_UNPOOLED = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
-const APP_ORIGIN = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+const APP_ORIGINS = [process.env.BETTER_AUTH_URL ?? "http://localhost:3000", process.env.APP_ORIGINS]
+  .filter(Boolean)
+  .join(",")
+  .split(",")
+  .map((o) => o.trim().replace(/\/$/, ""))
+  .filter(Boolean);
 
 if (!SECRET || !DB_UNPOOLED) {
   console.error("CHAT_JWT_SECRET and DATABASE_URL(_UNPOOLED) are required");
+  process.exit(1);
+}
+if (process.env.NODE_ENV === "production" && !process.env.BETTER_AUTH_URL) {
+  console.error("BETTER_AUTH_URL is required in production (CORS allowlist)");
   process.exit(1);
 }
 const secretKey = new TextEncoder().encode(SECRET);
@@ -35,7 +44,7 @@ const httpServer = createServer((_, res) => {
 });
 
 const io = new Server(httpServer, {
-  cors: { origin: [APP_ORIGIN], methods: ["GET", "POST"] },
+  cors: { origin: APP_ORIGINS, methods: ["GET", "POST"] },
 });
 
 // Auth middleware: short-lived JWT minted by the app (/api/chat-token)
@@ -111,5 +120,5 @@ function startListener() {
 startListener();
 
 httpServer.listen(PORT, () => {
-  console.log(`bookloop-realtime on :${PORT} (origin: ${APP_ORIGIN})`);
+  console.log(`bookloop-realtime on :${PORT} (origins: ${APP_ORIGINS.join(", ")})`);
 });

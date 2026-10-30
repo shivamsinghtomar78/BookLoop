@@ -1,0 +1,23 @@
+node_modules
+.next
+.git
+.gitignore
+.vercel
+.neon
+.env*
+!.env.example
+npm-debug.log*
+
+# local-only artifacts
+.playwright-mcp
+vibe_images
+*.png
+*.jpg
+*.jpeg
+*.webp
+!public/**/*.webp
+!public/**/*.png
+docs
+README.md
+# scripts/ stays in the context: src/db/seed.ts imports scripts/lib/test-db.mjs
+# and Next type-checks it during the production build.

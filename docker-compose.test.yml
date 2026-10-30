@@ -1,0 +1,64 @@
+# Isolated QA stack — a Neon branch, never production.
+#
+#   docker compose --env-file .env.test.local -f docker-compose.test.yml up --build -d
+#
+# Deliberately standalone (not an override of docker-compose.yml): merging the
+# demo file would pull .env / .env.local into the container and reintroduce the
+# production DATABASE_URL. Every DB-valued variable is mapped explicitly from
+# the TEST_* keys, and only .env.test.local is loaded.
+
+name: bookloop-test
+
+services:
+  web:
+    build:
+      context: .
+      target: runner
+    image: bookloop-web:test
+    ports:
+      - "3100:3000"
+    env_file:
+      - path: .env.test.local
+        required: true
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: ${TEST_DATABASE_URL:?TEST_DATABASE_URL is required}
+      DATABASE_URL_UNPOOLED: ${TEST_DATABASE_URL_UNPOOLED:?TEST_DATABASE_URL_UNPOOLED is required}
+      BETTER_AUTH_URL: http://localhost:3100
+      APP_ORIGINS: http://localhost:3100
+      NEXT_PUBLIC_REALTIME_URL: http://localhost:4101
+    restart: unless-stopped
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  realtime:
+    build:
+      context: .
+      target: realtime
+    image: bookloop-realtime:test
+    ports:
+      - "4101:4001"
+    env_file:
+      - path: .env.test.local
+        required: true
+    environment:
+      NODE_ENV: production
+      REALTIME_PORT: "4001"
+      DATABASE_URL: ${TEST_DATABASE_URL:?TEST_DATABASE_URL is required}
+      DATABASE_URL_UNPOOLED: ${TEST_DATABASE_URL_UNPOOLED:?TEST_DATABASE_URL_UNPOOLED is required}
+      BETTER_AUTH_URL: http://localhost:3100
+      APP_ORIGINS: http://localhost:3100
+    restart: unless-stopped
+    mem_limit: 384m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4001/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s

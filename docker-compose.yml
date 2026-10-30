@@ -1,0 +1,53 @@
+# Local demo stack. Web only:
+#   docker compose up --build
+# Web + socket.io realtime:
+#   docker compose --profile realtime up --build
+#
+# Secrets come from .env / .env.local on the host, never from the image.
+
+services:
+  web:
+    build:
+      context: .
+      target: runner
+    image: bookloop-web:local
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # The in-app token route points the browser at the local realtime twin.
+      NEXT_PUBLIC_REALTIME_URL: ${NEXT_PUBLIC_REALTIME_URL:-http://localhost:4001}
+    restart: unless-stopped
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+
+  realtime:
+    profiles: ["realtime"]
+    build:
+      context: .
+      target: realtime
+    image: bookloop-realtime:local
+    ports:
+      - "4001:4001"
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
+    environment:
+      NODE_ENV: development
+      REALTIME_PORT: "4001"
+      BETTER_AUTH_URL: http://localhost:3000
+    restart: unless-stopped
+    mem_limit: 384m
