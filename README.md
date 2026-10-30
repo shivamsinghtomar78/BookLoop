@@ -18,6 +18,17 @@ npm run dev
 
 Health check: `GET /api/health` → `{ ok: true, db: true }`
 
+## Docker
+
+```bash
+docker compose up --build                                  # web on :3000
+docker compose --profile realtime up --build               # + socket.io on :4001
+```
+
+Both images are small (`node:22-alpine`; web uses Next standalone output) and
+capped at 768 MB / 384 MB. Real secrets come from `.env` / `.env.local` at
+runtime — nothing is baked into the image.
+
 ## Documentation
 
 Everything lives in [`docs/`](docs/):

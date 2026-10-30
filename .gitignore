@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -47,3 +48,33 @@ next-env.d.ts
 # playwright mcp artifacts
 .playwright-mcp/
 responsive-*.png
+screenshots/
+
+# Local agent credentials
+.insta/agent-session.json
+
+# Local: the control plane this machine linked against
+.insta/link-plane.json
+
+# InstaCloud: local observe-hook state (regenerated per machine, not source)
+.insta/observe/
+.insta/audit.jsonl
+
+# InstaCloud: agent skills installed by `npx skills add` (regenerable, not source)
+.claude/skills/
+.agents/skills/
+.github/skills/
+skills-lock.json
+
+.insta/.agent-session-*.tmp
+
+# QA artifacts (screenshots, axe, lighthouse, traces)
+/artifacts/
+/test-results/
+/playwright-report/
+
+# Codex/agent local hook state
+/.codex/
+
+# Generated image staging
+/vibe_images/

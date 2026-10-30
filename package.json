@@ -6,11 +6,25 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
-    "realtime": "tsx realtime/server.ts"
+    "db:test:push": "node scripts/assert-test-db.mjs && drizzle-kit push --config drizzle.config.test.ts",
+    "db:test:seed": "tsx src/db/seed.ts",
+    "db:photos": "tsx scripts/refresh-listing-photos.ts",
+    "realtime": "tsx realtime/server.ts",
+    "test:db:assert": "node scripts/assert-test-db.mjs",
+    "test:db:cleanup": "node scripts/e2e-cleanup.mjs",
+    "test:preflight": "node scripts/test-preflight.mjs",
+    "test:stack": "docker compose --env-file .env.test.local -f docker-compose.test.yml up --build -d",
+    "test:stack:down": "docker compose --env-file .env.test.local -f docker-compose.test.yml down",
+    "test:e2e": "node scripts/e2e-negotiation.mjs",
+    "test:e2e:legacy": "node scripts/e2e-negotiation.mjs",
+    "test:qa": "playwright test",
+    "test:qa:a11y": "playwright test a11y",
+    "test:qa:report": "playwright show-report"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -20,13 +34,13 @@
     "@neon/functions": "^0.10.0",
     "@neondatabase/serverless": "^1.1.0",
     "@uploadthing/react": "^7.3.3",
-    "better-auth": "^1.7.4",
+    "better-auth": "^1.7.14",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",
     "drizzle-orm": "^0.45.2",
     "jose": "^6.2.12",
     "lucide-react": "^1.45.0",
-    "next": "16.3.5",
+    "next": "^16.4.3",
     "next-themes": "^0.4.6",
     "pg": "^8.23.0",
     "qrcode": "^1.5.4",
@@ -34,14 +48,17 @@
     "react-dom": "19.2.8",
     "react-hook-form": "^7.88.0",
     "shadcn": "^4.21.0",
+    "sharp": "^0.35.5",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "sonner": "^2.0.8",
     "tw-animate-css": "^1.4.0",
     "uploadthing": "^7.7.4",
-    "zod": "^4.6.4"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
@@ -52,9 +69,12 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
-    "sharp": "^0.35.4",
+    "playwright-core": "^1.63.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.13",
     "typescript": "^5"
+  },
+  "overrides": {
+    "proxy-addr": "^2.0.8"
   }
 }
