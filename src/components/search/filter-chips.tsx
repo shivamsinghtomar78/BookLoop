@@ -72,7 +72,7 @@ export function FilterChips() {
   return (
     <div className="flex flex-col gap-1">
       {/* Mode tabs — mirror the Home tabs (D-049) */}
-      <div className="-mx-4 flex overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <div className="no-scrollbar -mx-4 flex overflow-x-auto px-4 sm:mx-0 sm:px-0">
         {MODE_TABS.map((m) => (
           <Chip
             key={m.value}
@@ -85,7 +85,7 @@ export function FilterChips() {
       </div>
 
       {/* Category + class + condition + price rows */}
-      <div className="-mx-4 flex overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+      <div className="no-scrollbar max-sm:scroll-fade -mx-4 flex overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
         {CATEGORIES.map((c) => (
           <Chip
             key={c.value}
@@ -109,7 +109,7 @@ export function FilterChips() {
           ))}
       </div>
 
-      <div className="-mx-4 flex overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+      <div className="no-scrollbar max-sm:scroll-fade -mx-4 flex overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
         {CLASSES.map((c) => (
           <Chip
             key={c}
@@ -122,7 +122,7 @@ export function FilterChips() {
         ))}
       </div>
 
-      <div className="-mx-4 flex overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+      <div className="no-scrollbar max-sm:scroll-fade -mx-4 flex overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
         {CONDITIONS.map((c) => (
           <Chip
             key={c.value}

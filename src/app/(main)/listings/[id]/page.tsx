@@ -4,6 +4,7 @@
 
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { and, eq, ne, sql as dsql } from "drizzle-orm";
 import { ThumbsUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,37 @@ import { wishlistedIds } from "@/services/wishlist";
 import { CONDITIONS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const id = Number((await params).id);
+  if (!Number.isInteger(id)) return {};
+  const [row] = await getDb()
+    .select({
+      title: listings.title,
+      class: listings.class,
+      subject: listings.subject,
+      genre: listings.genre,
+      mode: listings.mode,
+    })
+    .from(listings)
+    .where(eq(listings.id, id))
+    .limit(1);
+  if (!row) return { title: "Book not found" };
+  const meta =
+    row.class && row.subject
+      ? `Class ${row.class} · ${row.subject}`
+      : (row.subject ?? row.genre ?? "");
+  const action = row.mode === "donate" ? "Free" : row.mode === "exchange" ? "Up for exchange" : "For sale";
+  return {
+    title: row.title,
+    description: `${action}${meta ? ` — ${meta}` : ""} on BookLoop, the school book exchange.`,
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function ListingPage({
   params,
@@ -76,6 +108,17 @@ export default async function ListingPage({
     listing.class && listing.subject
       ? `Class ${listing.class} · ${listing.subject}`
       : (listing.subject ?? listing.genre ?? "");
+
+  const details: [string, string][] = [];
+  if (listing.class) details.push(["Class", String(listing.class)]);
+  if (listing.subject) details.push(["Subject", listing.subject]);
+  if (listing.genre) details.push(["Category", listing.genre]);
+  if (conditionLabel) details.push(["Condition", conditionLabel]);
+  if (listing.editionYear) details.push(["Edition", String(listing.editionYear)]);
+  details.push([
+    "Listed",
+    listing.createdAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
+  ]);
 
   return (
     <div className="mx-auto mt-4 max-w-5xl pb-8 lg:mt-8 lg:grid lg:grid-cols-2 lg:gap-10">
@@ -158,6 +201,15 @@ export default async function ListingPage({
             <ThumbsUp className="size-4" /> {sellerStats?.thumbsUp ?? 0}
           </span>
         </div>
+
+        <dl className="border-hairline grid grid-cols-2 gap-x-4 gap-y-2 rounded-2xl border p-4 text-sm">
+          {details.map(([label, value]) => (
+            <div key={label} className="flex justify-between gap-2">
+              <dt className="text-subtle shrink-0">{label}</dt>
+              <dd className="min-w-0 truncate text-right font-medium">{value}</dd>
+            </div>
+          ))}
+        </dl>
 
         {/* Sticky chat bar: fixed above the tab bar < lg, inline in the info
             column lg+ — the ONE green action on the page (UI_REFERENCE §3).

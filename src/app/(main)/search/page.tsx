@@ -44,6 +44,12 @@ function parseFilters(sp: RawParams): SearchFilters {
   };
 }
 
+function hasFilters(f: SearchFilters) {
+  return Boolean(
+    f.q || f.mode || f.category || f.class || f.subject || f.exam || f.condition || f.price,
+  );
+}
+
 export default async function SearchPage({
   searchParams,
 }: {
@@ -82,16 +88,32 @@ export default async function SearchPage({
       </Suspense>
 
       {results.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {results.map((b) => (
-            <BookCard
-              key={b.id}
-              book={b}
-              layout="grid"
-              saved={savedSet.has(b.id)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="text-subtle text-sm" aria-live="polite">
+              {results.length === 60 ? "60+ books" : `${results.length} book${results.length === 1 ? "" : "s"}`}
+              {filters.q ? ` for “${filters.q}”` : ""}
+            </p>
+            {hasFilters(filters) && (
+              <Link
+                href="/search"
+                className="text-primary shrink-0 text-sm underline-offset-4 hover:underline"
+              >
+                Clear all
+              </Link>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {results.map((b) => (
+              <BookCard
+                key={b.id}
+                book={b}
+                layout="grid"
+                saved={savedSet.has(b.id)}
+              />
+            ))}
+          </div>
+        </>
       ) : (
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
           <p className="text-4xl">🔍</p>
