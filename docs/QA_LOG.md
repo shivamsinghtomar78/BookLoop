@@ -127,7 +127,14 @@ was found, what changed, and how it was verified.
     `min-h-0` transcript scrolling, and a compact status line that expands to
     the 5-step tracker. On `lg+` it is a WhatsApp-Web two-pane layout.
     Verified: `reservation` and `chat-layout` specs pass on all 8
-    Chromium/WebKit projects, then the full suite was re-run.
+    Chromium/WebKit projects, then the full suite was re-run (409 passed,
+    1 retried flake on a static page hydration timeout) and the updated
+    two-account script passed all 10 negotiation scenarios against the built
+    Docker image. Production deploy verified: `/`, `/exchange`, `/donate`,
+    `/privacy`, `/terms`, `/robots.txt`, `/sitemap.xml` = 200; guest
+    `/chats/1` and `/sell` = 307 to `/`; the served HTML carries the new
+    `interactive-widget` viewport hint. No manual DDL was run — the additive
+    columns are applied by the app on its first transaction read.
 
 ## Known, deliberately deferred
 
