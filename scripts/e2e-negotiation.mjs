@@ -78,15 +78,20 @@ async function signup(page, user, klass, age) {
     async () => !(await dialog.isVisible()),
     { label: `signup sheet to close for ${user.email}`, timeout: 45000 },
   );
-  await page.getByRole("link", { name: "Profile" }).waitFor({ timeout: 40000 });
+  await page.getByRole("link", { name: "Profile", exact: true }).waitFor({ timeout: 40000 });
   log(`  ✓ account ${user.email}`);
 }
 
 async function openChat(buyerPage, listingId) {
   await buyerPage.goto(`${BASE}/listings/${listingId}`, { waitUntil: "domcontentloaded" });
-  // Authed links only render once the client session has hydrated; clicking
-  // earlier would open the auth sheet instead of starting the chat.
-  await buyerPage.getByRole("link", { name: "Profile" }).waitFor({ timeout: 30000 });
+  // Authed links render in the server HTML; the chat CTA only works after React
+  // hydrates, otherwise the auth sheet opens for a signed-in buyer.
+  await buyerPage
+    .waitForFunction(() => document.documentElement.dataset.hydrated === "1", undefined, {
+      timeout: 30000,
+    })
+    .catch(() => {});
+  await buyerPage.getByRole("link", { name: "Profile", exact: true }).waitFor({ timeout: 30000 });
   await buyerPage.getByRole("button", { name: /Chat with Seller/ }).click();
   const outcome = await poll(
     async () => {
