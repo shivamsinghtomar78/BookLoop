@@ -39,8 +39,8 @@ fan out via socket.io / polling.
 | `/sell` | user | Create/edit listing: mode, category-specific fields, condition, price, photos | `components/sell/sell-form.tsx`, `photo-uploader.tsx`, `app/(main)/sell/actions.ts` |
 | `/exchange` | public | Exchange board: wants/offers matching | `services/exchange.ts` |
 | `/donate` | public | Donation board + impact stats | `services/impact.ts`, `components/donor-share.tsx` |
-| `/chats` | user | Chat inbox | `app/(main)/chats/page.tsx` |
-| `/chats/[id]` | participant | Conversation, offer, reserve/cancel, handover stepper, rating | `components/chat/chat-screen.tsx`, `stepper.tsx`, `app/(main)/chats/chat-actions.ts` |
+| `/chats` | user | Chat inbox | `app/(main)/chats/page.tsx`, `components/chat/chat-list.tsx` |
+| `/chats/[id]` | participant | Full-screen conversation (own `(chat)` layout: no site header/footer/nav), reserve → accept → handover → confirm stepper, rating; two-pane on `lg+` | `app/(chat)/chats/[id]/page.tsx`, `components/chat/chat-screen.tsx`, `chat-shell.tsx`, `tx-tracker.tsx`, `stepper.tsx`, `app/(main)/chats/chat-actions.ts` |
 | `/notifications` | user | In-app notifications (alert matches, chat, confirm handover) | `app/(main)/notifications/page.tsx` |
 | `/profile` | user | Own listings, wishlist, alerts, account actions | `app/(main)/profile/page.tsx` |
 | `/admin/stats` | admin (`ADMIN_EMAILS`) | Pilot metrics | `app/(main)/admin/stats/page.tsx` |
@@ -49,9 +49,10 @@ fan out via socket.io / polling.
 | password reset | — | **No flow** | — |
 
 Layouts/loading/error shells: `src/app/layout.tsx`, `(main)/layout.tsx`,
-`(main)/loading.tsx`, per-route `loading.tsx`, `src/app/error.tsx`,
-`src/app/not-found.tsx`. No route-level `error.tsx` under `(main)` and no
-`global-error.tsx`.
+`(chat)/layout.tsx` (viewport-height shell without the site chrome),
+`(main)/loading.tsx`, `(chat)/chats/[id]/loading.tsx`, per-route `loading.tsx`,
+`src/app/error.tsx`, `src/app/not-found.tsx`. No route-level `error.tsx` under
+`(main)` and no `global-error.tsx`.
 
 PWA: `components/install-prompt.tsx` + manifest only; no service worker/offline
 cache.
@@ -65,7 +66,7 @@ All are POST server actions gated by `requireUser()` unless noted.
 | `(auth)/actions.ts` | `signUpAction`, `signInAction`, `signOutAction` | Zod → Better Auth → `createProfile`. Signup is **not atomic** (auth user can exist without a profile if profile insert fails). No school-ID field. |
 | `(main)/sell/actions.ts` | `publishListingAction`, `updateListingAction`, `deleteListingAction` | Zod → `services/listings` → revalidate |
 | `(main)/buy-actions.ts` | `toggleWishlistAction`, `createAlertAction`, `deactivateAlertAction`, `markNotificationsReadAction` | |
-| `(main)/chats/chat-actions.ts` | `openChatAction`, `sendMessageAction`, `reserveAction`, `cancelReservationAction`, `askConfirmAction`, `confirmReceivedAction`, `rateAction` | Reservation, handover, rating |
+| `(main)/chats/chat-actions.ts` | `openChatAction`, `sendMessageAction`, `reserveAction`, `acceptReservationAction`, `cancelReservationAction`, `handoverAction`, `confirmReceivedAction`, `rateAction` | Four-gate reservation, handover, rating |
 | `(main)/feedback-actions.ts` | `reportProblemAction` | Guest allowed (nullable `feedback.user_id`) |
 
 ## 5. HTTP API

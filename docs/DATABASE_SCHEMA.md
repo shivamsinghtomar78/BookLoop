@@ -52,7 +52,10 @@ erDiagram
         int id PK
         int listing_id FK
         int buyer_id FK
-        timestamp completed_at
+        timestamp seller_marked_at "reserved"
+        timestamp buyer_accepted_at "nullable"
+        timestamp seller_handed_over_at "nullable"
+        timestamp buyer_confirmed_at "nullable"
     }
 ```
 
@@ -190,8 +193,9 @@ export const messages = pgTable(
 );
 
 // ---------- Transactions & ratings ----------
-// Created when the seller taps "Mark as Sold/Exchanged/Donated" in chat;
-// completed when the buyer confirms. Listing flips to status=closed.
+// Four-gate lifecycle (D-061): created when the seller reserves in chat,
+// accepted by the buyer, handed over by the seller, then confirmed by the
+// buyer — only that last gate flips the listing to status=closed.
 
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
@@ -201,7 +205,9 @@ export const transactions = pgTable("transactions", {
   buyerId: integer("buyer_id").notNull().references(() => users.id),
   mode: modeEnum("mode").notNull(),
   priceInr: integer("price_inr"),                 // NULL for exchange/donate
-  sellerMarkedAt: timestamp("seller_marked_at").notNull().defaultNow(),
+  sellerMarkedAt: timestamp("seller_marked_at").notNull().defaultNow(), // reserved
+  buyerAcceptedAt: timestamp("buyer_accepted_at"),   // NULL until buyer accepts
+  sellerHandedOverAt: timestamp("seller_handed_over_at"), // NULL until handover
   buyerConfirmedAt: timestamp("buyer_confirmed_at"), // NULL until buyer confirms
 });
 
@@ -265,6 +271,24 @@ export const notifications = pgTable(
 
 ---
 
+## 2a. Runtime additive schema (`src/db/ensure.ts`)
+
+Production is live and there is no migrations directory (DDL normally goes
+through `drizzle-kit push`), so two tables bootstrap themselves on first use:
+
+| Helper | Creates | Used by |
+|---|---|---|
+| `ensurePhotoBlobTable()` | `photo_blobs` (+ owner index) | photo upload fallback |
+| `ensureTransactionColumns()` | adds `buyer_accepted_at`, `seller_handed_over_at` to `transactions`; creates `schema_meta`; one-time backfill marked `tx_reservation_v2` | `txForListing()` in the transactions service |
+
+Every statement is `if not exists`/idempotent and memoized per process (the
+promise is reset on failure so the next request retries). The `schema_meta`
+marker row is inserted in the same statement as the backfill, so exactly one
+instance backfills and later reservations created after deploy keep their new
+columns `NULL`.
+
+---
+
 ## 3. Lifecycle walkthroughs (how the tables work together)
 
 **A book gets sold:**
@@ -272,9 +296,11 @@ export const notifications = pgTable(
 2. New listing is matched against `book_alerts` → matching users get a `notifications` row (+ Resend email).
 3. Buyer opens chat → row in `chats`, messages accumulate in `messages` (chat screen polls this table).
 4. They agree → seller taps **Reserve for this buyer** → `transactions` row created (`seller_marked_at` = now), listing `status = reserved`. Handover at the school pickup point.
-5. Seller taps **Mark as Sold** → buyer confirms → `buyer_confirmed_at` set, listing `status = closed`.
-   *Zombie guard (D-043):* a reservation with `buyer_confirmed_at` still NULL 72h after `seller_marked_at` is lazily reverted on next read — listing back to `active`, transaction voided, both parties notified. No cron needed.
-6. Both sides get a one-tap 👍/👎 prompt → rows in `ratings`. A profile's 👍 count = `count(ratings where ratee_id = user AND thumbs_up)`.
+5. Buyer taps **Accept reservation** → `buyer_accepted_at` set (listing stays `reserved`). Cancel is still allowed by either side.
+6. Seller taps **I handed it over** → `seller_handed_over_at` set. Cancel is no longer offered.
+7. Buyer taps **Confirm received** → `buyer_confirmed_at` set, listing `status = closed`.
+   *Zombie guard (D-043, revised by D-061):* a reservation still missing `seller_handed_over_at` 72h after `coalesce(buyer_accepted_at, seller_marked_at)` is lazily reverted on next read — listing back to `active`, transaction voided, both parties notified. No cron needed. Handed-over deals never expire.
+8. Both sides get a one-tap 👍/👎 prompt → rows in `ratings`. A profile's 👍 count = `count(ratings where ratee_id = user AND thumbs_up)`.
 
 **Exchange:** same flow with `mode = exchange`, `price_inr = NULL`, `wants_book` filled. "Possible matches for you" (stretch goal) = listings where `wants_book` roughly matches something you have listed — no schema change needed.
 

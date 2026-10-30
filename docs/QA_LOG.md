@@ -104,6 +104,31 @@ was found, what changed, and how it was verified.
     earlier checklist entry claiming `NEXT_PUBLIC_APP_URL` was set is corrected
     rather than silently left as a false green tick.
 
+21. **One tap closed the whole deal — and the chat was not mobile-native.**
+    Manual production testing with the pilot accounts (seller Shivani, buyer
+    Tanishka) hit two defects at once. (a) The seller reserved, the buyer
+    tapped the single confirmation, and the listing closed with every stepper
+    step ticked: `transactions` only had `seller_marked_at` and
+    `buyer_confirmed_at`, `askBuyerToConfirm` wrote nothing, `confirmReceived`
+    had no handover guard, and the stepper derived five steps from those two
+    timestamps. The lifecycle is now four gates — reserve (seller) → accept
+    (buyer) → handed over (seller) → confirm received (buyer) → rate — each
+    with its own nullable timestamp and conditional update, so one tap moves
+    exactly one step. Cancel works until handover; the 72 h lazy expiry runs
+    from `coalesce(buyer_accepted_at, seller_marked_at)` and stops at handover.
+    Existing databases self-upgrade through `ensureTransactionColumns()`
+    (idempotent `alter … add column if not exists` + one-time
+    `schema_meta`-guarded backfill) because production is live. (b) The thread
+    was a centered card stack inside the full site shell, so phones showed
+    header, footer and bottom nav, left the transcript short and could scroll
+    the page instead of the conversation. `/chats/[id]` now lives in a
+    `(chat)` route group with no site chrome: full `100dvh` shell, safe-area
+    padding, pinned composer, `visualViewport` height for the keyboard,
+    `min-h-0` transcript scrolling, and a compact status line that expands to
+    the 5-step tracker. On `lg+` it is a WhatsApp-Web two-pane layout.
+    Verified: `reservation` and `chat-layout` specs pass on all 8
+    Chromium/WebKit projects, then the full suite was re-run.
+
 ## Known, deliberately deferred
 
 - Password reset needs an email provider (testing mode D-059 has none).

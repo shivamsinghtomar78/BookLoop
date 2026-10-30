@@ -133,7 +133,7 @@ Two tabs:
 - **Status stepper** at the top, identical for both sides: Chatting → Reserved → Meet at pickup → Done → Rate (D-044)
 - New chats open with **quick-ask chips**: "Is this available?" · "Can we meet tomorrow?" · "Will you take ₹__?" (D-044)
 - Pinned system card: "Meet at the school library/office to hand over books" + "suggest a time" quick action
-- Seller actions inside chat: **Reserve for this buyer** → **Mark as Sold/Exchanged/Donated** → buyer confirms → listing closes; unconfirmed reservations auto-expire after 72h (D-043)
+- Seller actions inside chat: **Reserve for this buyer** → buyer **Accept reservation** → seller **I handed it over** → buyer **Confirm received** → listing closes (four gates, D-061); either side can cancel before handover, and reservations not handed over auto-expire after 72h (D-043). On phones the chat is a full-screen WhatsApp-style thread; on wide screens, a two-pane list + thread (WhatsApp Web).
 - After confirmation: both sides get a 👍/👎 rating prompt (one tap, optional)
 
 ### P1 — Profile

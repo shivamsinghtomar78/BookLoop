@@ -126,12 +126,14 @@ The trust-critical moment is the handover. Both sides always see the same **stat
 ● Chatting ──── ● Reserved ──── ● Meet at pickup ──── ● Done ✓ ──── ● Rate
 ```
 
-1. Seller taps **Reserve for this buyer** in chat → listing leaves search, both see "Reserved".
-2. Pinned card shows the pickup point and a **"suggest a time"** quick action.
-3. After handover, seller taps **Mark as Sold** → buyer gets **Confirm received** (one tap).
-4. Confirmation triggers the 👍/👎 prompt for both — one tap, skippable, done.
+1. Seller taps **Reserve for this buyer** in chat → listing leaves search, both see "Reserved"; the buyer gets "accept to lock it in".
+2. Buyer taps **Accept reservation** — only this step advances; both sides now see "Meet at pickup". Pinned card shows the pickup point and a **"suggest a time"** quick action.
+3. After the handover the seller taps **I handed it over** (exchange: "I exchanged it") → buyer gets **Confirm received**.
+4. Buyer taps **Confirm received** → listing closes; both get the 👍/👎 prompt. One tap each, every step visible to both sides.
 
-**Zombie-reservation guard:** a reservation that sits unconfirmed for **72 hours auto-expires** — the listing quietly returns to `active` and both sides are notified ("Reservation expired — book is available again"). Checked lazily on read (no cron, per ARCHITECTURE.md); no book ever gets stuck "Reserved" because someone stopped replying — the marketplace never silts up.
+Until the handover is marked, either side can **Cancel** (listing returns to `active`). The buyer cannot confirm before the seller marks the handover, and the seller cannot mark it before the buyer accepts.
+
+**Zombie-reservation guard:** a reservation that is not accepted **and** not handed over for **72 hours auto-expires** — the listing quietly returns to `active` and both sides are notified ("Reservation expired — book is available again"). Checked lazily on read (no cron, per ARCHITECTURE.md); the clock runs from the acceptance (or the reserve, if never accepted), and stops once the handover is marked because the buyer already has the book. No book ever gets stuck "Reserved" because someone stopped replying — the marketplace never silts up.
 
 ---
 

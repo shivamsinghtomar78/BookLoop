@@ -137,12 +137,16 @@ Worst-case math: 50 simultaneously open chats = ~12.5 req/s of single-indexed-qu
 `listings.status` transitions are **guarded in the transactions service** — the only place allowed to change status:
 
 ```
-active ──(seller marks in chat)──► reserved ──(buyer confirms)──► closed
-   ▲            │                                      │
-   └────────────┘ (either side cancels)                └─► ratings prompt (both sides)
+        seller reserves                buyer confirms receipt
+active ────────────────► reserved ──────────────────────────► closed
+   ▲                        │                                    │
+   └── cancel (either side) │                                    └──► rate (both)
+       or 72h lazy expiry ──┘
 ```
 
-Guards enforced server-side: only the seller can mark; only the chat's buyer can confirm; `transactions.listing_id` is UNIQUE so a listing can only close once — the invariant holds even if two requests race.
+A reservation closes through **four gates, each by the right actor** (D-061): seller reserves (`seller_marked_at`) → buyer accepts (`buyer_accepted_at`) → seller marks the handover (`seller_handed_over_at`) → buyer confirms receipt (`buyer_confirmed_at`, listing `closed`). The stepper is derived from those timestamps, so it can only advance one step per real action. Guards enforced server-side: only the seller reserves and marks handover; only the chat's buyer accepts and confirms; `transactions.listing_id` is UNIQUE so a listing can only close once — the invariant holds even if two requests race. Every transition is a conditional update (`isNull`) so a double tap is a silent no-op.
+
+Existing databases get the two new nullable columns through `ensureTransactionColumns()` on the first transaction read: idempotent `alter table … add column if not exists`, plus a one-time backfill behind a `schema_meta` marker (existing reservations count as accepted at reserve time; existing closed deals as handed over at confirmation time). No manual DDL on production.
 
 ---
 

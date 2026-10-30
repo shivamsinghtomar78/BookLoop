@@ -474,6 +474,15 @@ Every decision made during development goes in this file — big or small, produ
 - **Instead of:** Hosting `realtime/server.ts` on Render/Railway (D-055's deployment plan — no longer necessary; still possible via the env override if ever wanted).
 - **Status:** ✅ Active (supersedes D-055's deployment note; D-055's push-only architecture unchanged)
 
+### D-061 — Four-gate reservation lifecycle + lazy additive schema on live prod
+- **Date:** 2026-10-31
+- **Area:** Tech / Product
+- **Decision:** A reservation now needs **four separate taps by the right person before it closes**: seller reserves (`seller_marked_at`, listing `reserved`) → buyer accepts (`buyer_accepted_at`) → seller marks the handover (`seller_handed_over_at`) → buyer confirms receipt (`buyer_confirmed_at`, listing `closed`) → either side rates. The stepper is derived from those four timestamps (plus `myRating`), so it can only tick one step per real action. Acceptance and handover are separate nullable columns on `transactions`; every transition is a conditional update (`isNull(...)`) so double taps are silent no-ops. Cancel is allowed by either side until handover; the lazy 72 h expiry now measures from `coalesce(buyer_accepted_at, seller_marked_at)` and stops entirely once handover is marked (the buyer physically has the book, so relisting would be wrong).
+- **Schema on a live database:** no manual DDL. `ensureTransactionColumns()` (mirrors `ensurePhotoBlobTable`) runs on the first full transaction read and issues idempotent `alter table … add column if not exists` statements, then backfills **exactly once** behind a `schema_meta` marker row (`tx_reservation_v2`): `buyer_accepted_at = coalesce(…, seller_marked_at)` and `seller_handed_over_at = coalesce(…, buyer_confirmed_at)`, so pre-existing reservations open at the right step and closed deals stay closed. The marker prevents a later instance from auto-accepting reservations created after deploy.
+- **Why:** Manual testing on production showed a single buyer confirmation closing the entire deal and ticking every step — the table only had two booleans-worth of timestamps, `askBuyerToConfirm` wrote nothing, and `confirmReceived` had no handover guard. Both sides need to see and act on each stage.
+- **Instead of:** A separate `transaction_events` table (more joins and no simpler UI) or a status enum on `transactions` (still needs actor guards; timestamps are what the stepper renders). Manual migration was ruled out because production is live and the QA constraint forbids risky prod DDL.
+- **Status:** ✅ Active
+
 ---
 
-*Next entry: D-061.*
+*Next entry: D-062.*

@@ -59,3 +59,31 @@
 
 ### Realtime deployment note *(updated by D-060)*
 Realtime now deploys **with the app on Vercel**: `api/socketio.ts` is a vanilla Vercel Function exporting the Socket.IO `http.Server` (Vercel Functions support WebSockets on Fluid Compute). Same-origin, no extra host, no CORS. `realtime/server.ts` remains the local-dev twin (`npm run realtime`, :4001) since root `api/` functions don't run under `next dev`; `NEXT_PUBLIC_REALTIME_URL` stays as an optional external-host override. The D-037 polling fallback still covers any socket gap.
+
+## Revision 2026-10-31 — four-gate reservation lifecycle (D-061)
+Manual production testing showed a single buyer confirmation closing the whole
+deal. The lifecycle is now four gates, each with its own actor and its own
+timestamp on `transactions`:
+
+| Gate | Actor | Writes |
+|---|---|---|
+| Reserve | seller | `seller_marked_at`, listing `reserved` |
+| Accept reservation | buyer | `buyer_accepted_at` |
+| I handed it over | seller | `seller_handed_over_at` |
+| Confirm received | buyer | `buyer_confirmed_at`, listing `closed` |
+
+- `askBuyerToConfirm` became `markHandedOver`; `acceptReservation` is new. Cancel
+  works until handover; lazy expiry measures from
+  `coalesce(buyer_accepted_at, seller_marked_at)` and stops at handover.
+- Existing databases are upgraded in-app by `ensureTransactionColumns()`
+  (`alter table … add column if not exists` + a one-time `schema_meta`-guarded
+  backfill) — no manual DDL on the live database.
+- UI: the chat is now a full-screen WhatsApp-style thread inside its own
+  `(chat)` route group (no site header/footer/nav, safe-area padding, pinned
+  composer, `visualViewport` keyboard handling); on `lg+` a WhatsApp-Web
+  two-pane layout shows the conversation list beside the thread. The compact
+  mobile tracker expands to the 5-step stepper with per-step timestamps.
+- Tests: `tests/e2e/reservation.spec.ts` walks all four gates with two
+  contexts and DB assertions; `tests/e2e/chat-layout.spec.ts` pins the
+  390×844 full-bleed shell and the 1440×900 two-pane layout. The legacy
+  `scripts/e2e-negotiation.mjs` now accepts and hands over before confirming.
