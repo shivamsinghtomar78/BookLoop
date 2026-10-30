@@ -5,7 +5,15 @@ import { test, expect } from "@playwright/test";
 test.describe("home", () => {
   test("hero and browse shelves render without console errors", async ({ page }) => {
     const errors: string[] = [];
-    page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+    // `interactive-widget=resizes-content` is a Chrome-only viewport hint used
+    // for the Android keyboard; WebKit logs (as an error) that it ignores it.
+    // That is a platform capability note, not an app error.
+    const isPlatformWarning = (text: string) =>
+      text.includes('Viewport argument key "interactive-widget"');
+    page.on(
+      "console",
+      (m) => m.type() === "error" && !isPlatformWarning(m.text()) && errors.push(m.text()),
+    );
     await page.goto("/");
     await expect(
       page.getByRole("heading", { name: /Give every book/i }),

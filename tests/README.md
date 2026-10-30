@@ -48,6 +48,8 @@ Seeded logins (password `Bookloop!2345`): `seller1…5`, `buyer1…4`,
 | `listing.spec.ts` | detail facts, contact privacy, wishlist, 404 status |
 | `sell.spec.ts` | validation, photo upload (local WebP path), publish |
 | `chat.spec.ts` | gated entry, send, participant isolation |
+| `reservation.spec.ts` | full four-gate deal with two accounts: reserve → accept → hand over → confirm (+ negative action checks, DB timestamps) |
+| `chat-layout.spec.ts` | 390×844 full-bleed thread with pinned composer; 1440×900 two-pane list + thread |
 | `a11y.spec.ts` | axe WCAG 2.1 A/AA on 9 pages (fails critical/serious) |
 | `security.spec.ts` | headers, CSRF origins, auth boundaries, uploads, admin gate |
 | `performance.spec.ts` | LCP/CLS budgets, warm TTFB |

@@ -46,7 +46,9 @@ async function poll(fn, { timeout = 30000, interval = 350, label = "condition" }
 
 async function dbState(listingId) {
   const { rows } = await pool.query(
-    `select l.status, t.id as tx_id, t.buyer_confirmed_at, t.seller_id, t.buyer_id
+    `select l.status, t.id as tx_id, t.seller_marked_at, t.buyer_accepted_at,
+            t.seller_handed_over_at, t.buyer_confirmed_at,
+            t.seller_id, t.buyer_id
        from listings l left join transactions t on t.listing_id = l.id
       where l.id = $1`,
     [listingId],
@@ -230,6 +232,34 @@ async function runScenario({ n, scenario, listingId, buyerPage, sellerPage, gues
     await sellerPage.screenshot({ path: `${SHOTS}/${scenario.capture}-seller-reserved.png` });
     await guestPage.screenshot({ path: `${SHOTS}/${scenario.capture}-public-reserved.png` });
   }
+
+  // Gate 2 — only the buyer can accept, and that alone must not close the deal.
+  await buyerPage.reload({ waitUntil: "domcontentloaded" });
+  await buyerPage.getByRole("button", { name: "Accept reservation" }).click({ timeout: 45000 });
+  const accepted = await poll(
+    async () => {
+      const st = await dbState(listingId);
+      return st?.buyer_accepted_at && st.status === "reserved" && !st.buyer_confirmed_at ? st : null;
+    },
+    { label: "buyer acceptance recorded" },
+  );
+  log(`  ✓ buyer accepted (buyer_accepted_at set, listing still ${accepted.status})`);
+
+  // Gate 3 — the seller marks the handover; the buyer cannot confirm before this.
+  const handoverLabel = scenario.mode === "exchange" ? "I exchanged it" : "I handed it over";
+  await sellerPage.reload({ waitUntil: "domcontentloaded" });
+  if (await buyerPage.getByRole("button", { name: /Confirm (received|exchanged) ✓/ }).count()) {
+    throw new Error("buyer could confirm before the seller marked the handover");
+  }
+  await sellerPage.getByRole("button", { name: handoverLabel }).click({ timeout: 45000 });
+  await poll(
+    async () => {
+      const st = await dbState(listingId);
+      return st?.seller_handed_over_at && st.status === "reserved" && !st.buyer_confirmed_at ? st : null;
+    },
+    { label: "seller handover recorded" },
+  );
+  log("  ✓ seller marked handover (seller_handed_over_at set)");
 
   const confirmLabel = scenario.mode === "exchange" ? "Confirm exchanged ✓" : "Confirm received ✓";
   await buyerPage.reload({ waitUntil: "domcontentloaded" });
