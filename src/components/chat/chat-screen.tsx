@@ -57,10 +57,11 @@ export function ChatScreen(props: {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState(false); // socket connected?
+  const [now, setNow] = useState(0); // client clock for the 48h nudge
 
   const lastIdRef = useRef(props.initialMessages.at(-1)?.id ?? 0);
   const seenIds = useRef(new Set(props.initialMessages.map((m) => m.id)));
-  const lastActivityRef = useRef(Date.now());
+  const lastActivityRef = useRef(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const liveRef = useRef(false);
@@ -156,8 +157,19 @@ export function ChatScreen(props: {
     };
   }, [props.chatId, append, refetch]);
 
+  // Client clock for relative-age hints; starts after mount so render stays pure.
+  useEffect(() => {
+    const prime = setTimeout(() => setNow(Date.now()), 0);
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => {
+      clearTimeout(prime);
+      clearInterval(id);
+    };
+  }, []);
+
   // ---- polling fallback (D-037): 4s visible → 15s idle; paused when live/hidden ----
   useEffect(() => {
+    lastActivityRef.current = Date.now();
     let timer: ReturnType<typeof setTimeout>;
     let stopped = false;
 
@@ -256,11 +268,12 @@ export function ChatScreen(props: {
       {(() => {
         const last = msgs.at(-1);
         const silent48h =
+          now > 0 &&
           props.role === "buyer" &&
           state.listingStatus === "active" &&
           last &&
           last.senderId === props.meId &&
-          Date.now() - new Date(last.at).getTime() > 48 * 3600 * 1000;
+          now - new Date(last.at).getTime() > 48 * 3600 * 1000;
         return silent48h ? (
           <div className="bg-surface-soft mt-2 rounded-lg px-3 py-2 text-xs">
             Seller&apos;s been quiet for a while —{" "}
@@ -290,7 +303,13 @@ export function ChatScreen(props: {
             Say hi — no phone numbers needed, everything happens here.
           </p>
         )}
-        <div className="flex flex-col gap-1.5">
+        <div
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions"
+          aria-label="Messages"
+          className="flex flex-col gap-1.5"
+        >
           {msgs.map((m) => (
             <div
               key={m.id}

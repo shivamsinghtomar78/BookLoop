@@ -1,17 +1,24 @@
-// Home (Task 3.1, D-049/D-050): mode tabs re-scope every shelf; shelves have
-// linked headings + See all; "Books for your class" is profile-aware.
-// Hybrid layout: horizontal shelves < md, responsive grids md+ (D-054).
+// Home (Task 3.1, D-049/D-050): hero promise, then mode tabs re-scope every
+// shelf; shelves have linked headings + See all; "Books for your class" is
+// profile-aware. Hybrid layout: horizontal shelves < md, grids md+ (D-054).
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import { BookCard, type BookCardData } from "@/components/book-card";
 import { InstallPrompt } from "@/components/install-prompt";
+import { Departments } from "@/components/marketing/departments";
+import { Hero } from "@/components/marketing/hero";
+import { HowItWorks } from "@/components/marketing/how-it-works";
+import { ShopByClass } from "@/components/marketing/shop-by-class";
+import type { HeroPhoto } from "@/components/marketing/hero-scene";
 import {
   activeListingsByMode,
   activeListingsForClass,
   recentActiveListings,
   searchListings,
 } from "@/db/repos/listings";
+import { HERO_BOOK_PHOTOS } from "@/db/seed-photos";
+import { getImpactStats } from "@/services/impact";
 import { getCurrentUser } from "@/services/users";
 import { wishlistedIds } from "@/services/wishlist";
 import { cn } from "@/lib/utils";
@@ -55,7 +62,7 @@ function Shelf({
         </Link>
       </div>
 
-      <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-1 md:hidden">
+      <div className="no-scrollbar -mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-1 sm:gap-4 md:hidden">
         {books.map((b) => (
           <BookCard key={b.id} book={b} layout="shelf" saved={savedSet.has(b.id)} />
         ))}
@@ -67,6 +74,27 @@ function Shelf({
       </div>
     </section>
   );
+}
+
+/** Live listing covers first, then curated real book photos to fill the rail. */
+function heroPhotos(books: BookCardData[]): HeroPhoto[] {
+  const seen = new Set<string>();
+  const photos: HeroPhoto[] = [];
+
+  for (const b of books) {
+    if (!b.photoUrl || seen.has(b.photoUrl)) continue;
+    seen.add(b.photoUrl);
+    photos.push({ src: b.photoUrl, alt: b.title });
+    if (photos.length >= 10) return photos;
+  }
+
+  for (const src of HERO_BOOK_PHOTOS) {
+    if (photos.length >= 10) break;
+    if (seen.has(src)) continue;
+    seen.add(src);
+    photos.push({ src, alt: "A school book listed on BookLoop" });
+  }
+  return photos;
 }
 
 export default async function HomePage({
@@ -82,13 +110,14 @@ export default async function HomePage({
   const current = await getCurrentUser();
   const viewerClass = current?.profile.class;
 
-  const [classShelf, recent, donations, wanted] = await Promise.all([
+  const [classShelf, recent, donations, wanted, stats] = await Promise.all([
     viewerClass && !mode
       ? activeListingsForClass(viewerClass, 12)
       : Promise.resolve([]),
     mode ? searchListings({ mode }, viewerClass, 24) : recentActiveListings(12),
     mode ? Promise.resolve([]) : activeListingsByMode("donate", 12),
     mode ? Promise.resolve([]) : activeListingsByMode("exchange", 12),
+    getImpactStats(),
   ]);
 
   const allIds = [...classShelf, ...recent, ...donations, ...wanted].map((b) => b.id);
@@ -96,29 +125,53 @@ export default async function HomePage({
     ? await wishlistedIds(current.profile.id, allIds)
     : new Set<number>();
 
-  return (
-    <div>
-      <h1 className="sr-only">BookLoop — buy, sell, exchange and donate school books</h1>
+  const photos = heroPhotos([...classShelf, ...recent, ...donations, ...wanted]);
 
-      {/* Mode tabs — one tap re-scopes the page (D-049) */}
-      <div className="border-hairline -mx-4 mt-1 flex overflow-x-auto border-b px-4 sm:mx-0 sm:px-0">
-        {MODE_TABS.map((t) => {
-          const active = (mode ?? "") === t.value;
-          return (
-            <Link
-              key={t.value}
-              href={t.value ? `/?mode=${t.value}` : "/"}
-              className={cn(
-                "-mb-px flex min-h-11 shrink-0 items-center border-b-2 px-4 text-sm font-medium transition",
-                active
-                  ? "border-b-primary text-foreground"
-                  : "border-b-transparent text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t.label}
-            </Link>
-          );
-        })}
+  return (
+    <>
+      <Hero stats={stats} photos={photos} />
+
+      <Departments />
+
+      <div id="browse" className="scroll-mt-24">
+        <div className="mt-10 flex flex-wrap items-end justify-between gap-3 md:mt-14">
+          <div>
+            <p className="text-primary text-[10px] font-semibold tracking-[0.2em] uppercase">
+              Browse the loop
+            </p>
+            <h2 className="font-display text-ink mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Find your next book
+            </h2>
+          </div>
+          <Link
+            href="/search"
+            className="text-body hover:text-ink group inline-flex items-center gap-1.5 text-sm font-medium transition"
+          >
+            Explore all
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+
+        {/* Mode tabs — one tap re-scopes the page (D-049) */}
+        <div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto pb-1">
+          {MODE_TABS.map((t) => {
+            const active = (mode ?? "") === t.value;
+            return (
+              <Link
+                key={t.value}
+                href={t.value ? `/?mode=${t.value}` : "/"}
+                className={cn(
+                  "inline-flex min-h-10 shrink-0 items-center rounded-full border px-4 text-sm font-medium transition",
+                  active
+                    ? "border-ink bg-ink text-white shadow-sm"
+                    : "border-hairline bg-card text-body hover:border-ink/20 hover:text-ink",
+                )}
+              >
+                {t.label}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       <InstallPrompt />
@@ -182,6 +235,9 @@ export default async function HomePage({
           </p>
         </div>
       )}
-    </div>
+
+      <ShopByClass />
+      <HowItWorks />
+    </>
   );
 }

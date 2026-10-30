@@ -11,17 +11,29 @@ import { cn } from "@/lib/utils";
 
 export function BottomNav() {
   const pathname = usePathname();
+  const dark = pathname === "/";
   const { gatedGo } = useGatedNav();
 
   const itemCls = (active: boolean) =>
     cn(
       "flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-medium transition",
-      active ? "text-primary" : "text-muted-foreground",
+      dark
+        ? active
+          ? "text-lime-soft"
+          : "text-white/55 hover:text-white"
+        : active
+          ? "text-primary"
+          : "text-muted-foreground hover:text-foreground",
     );
 
   return (
     <nav
-      className="border-hairline bg-card fixed inset-x-0 bottom-0 z-40 border-t md:hidden"
+      className={cn(
+        "fixed inset-x-0 bottom-0 z-40 border-t md:hidden",
+        dark
+          ? "bg-forest/95 border-white/10 backdrop-blur-xl"
+          : "border-hairline bg-card",
+      )}
       aria-label="Main"
     >
       <div className="mx-auto flex max-w-md items-center">
@@ -39,7 +51,14 @@ export function BottomNav() {
           onClick={() => gatedGo("/sell")}
           className="flex min-h-12 flex-1 flex-col items-center justify-center py-1"
         >
-          <span className="bg-primary text-primary-foreground flex size-11 items-center justify-center rounded-full">
+          <span
+            className={cn(
+              "flex size-11 items-center justify-center rounded-full shadow-lg transition active:scale-95",
+              dark
+                ? "bg-lime-soft text-forest shadow-lime-soft/20"
+                : "bg-primary text-primary-foreground shadow-primary/25",
+            )}
+          >
             <Plus className="size-6" />
           </span>
         </button>

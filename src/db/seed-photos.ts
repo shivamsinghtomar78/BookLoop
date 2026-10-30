@@ -1,35 +1,34 @@
-// Real book photos for seed/demo data (replaces picsum placeholders).
-// Source: Unsplash CDN — photographs of physical books; the Unsplash license
-// permits free use, and every URL below was verified live (HTTP 200,
-// image/jpeg) on 14 Sep 2026. Category grouping is cosmetic; photoFor()
-// cycles deterministically so reseeds are stable.
+// Real book photos for seed/demo data. Self-hosted WebP copies of Unsplash
+// photographs (free to use under the Unsplash license) — no third-party CDN
+// dependency at runtime, and no image-optimizer timeouts during a demo.
+// Category grouping is cosmetic; photoFor() cycles deterministically so
+// reseeds are stable.
 
-const Q = "?w=800&q=70&auto=format&fit=crop";
-const u = (id: string) => `https://images.unsplash.com/${id}${Q}`;
+const p = (name: string) => `/images/books/${name}.webp`;
 
 export const BOOK_PHOTOS: Record<string, string[]> = {
   textbook: [
-    u("photo-1497633762265-9d179a990aa6"), // stack of textbooks
-    u("photo-1543002588-bfa74002ed7e"),    // book stack, plain background
-    u("photo-1481627834876-b7833e8f5570"), // row of books
+    p("textbook-stack"), // stack of school textbooks
+    p("books-in-hand"), // hand holding a stack of books
+    p("open-book-stack"), // open book resting on a stack
   ],
   reference: [
-    u("photo-1524995997946-a1c2e315a42f"), // books + notes on desk
-    u("photo-1456513080510-7bf3a84b82f8"), // workbook + pencil
+    p("reference-desk"), // open reference books on a desk
+    p("study-stack"), // stack of study books
+    p("open-book-stack"), // open book close-up
   ],
   competitive: [
-    u("photo-1509266272358-7701da638078"), // study notes/notebook
-    u("photo-1532012197267-da84d127e765"), // hardback close-up
+    p("study-stack"), // stack of exam-prep books
+    p("library-shelves"), // library shelves
+    p("notes-workbook"), // notes and workbook
   ],
   novel: [
-    u("photo-1544947950-fa07a98d237f"),    // open book on table
-    u("photo-1512820790803-83ca734da794"), // open book, warm light
-    u("photo-1476275466078-4007374efbbe"), // open book pages
-    u("photo-1519682337058-a94d519337bc"), // book in soft light
+    p("milk-and-honey"), // poetry collection on a table
+    p("novel-grass"), // open novel in grass
+    p("pink-books"), // pink book collection
+    p("books-in-hand"), // books in soft light
   ],
-  generic: [
-    u("photo-1507842217343-583bb7270b66"), // library shelves
-  ],
+  generic: [p("library-shelves"), p("study-stack")],
 };
 
 const ALL = Object.values(BOOK_PHOTOS).flat();
@@ -46,3 +45,15 @@ export function altPhotoFor(category: string, i: number): string {
   if (pool.length < 2) return ALL[i % ALL.length];
   return pool[(i + 1) % pool.length];
 }
+
+/** Immersive hero marquee — one book photo per curated slot. */
+export const HERO_BOOK_PHOTOS = [
+  BOOK_PHOTOS.textbook[0],
+  BOOK_PHOTOS.novel[0],
+  BOOK_PHOTOS.reference[0],
+  BOOK_PHOTOS.competitive[0],
+  BOOK_PHOTOS.novel[1],
+  BOOK_PHOTOS.textbook[1],
+  BOOK_PHOTOS.reference[1],
+  BOOK_PHOTOS.novel[2],
+];

@@ -13,6 +13,32 @@ import { listingPhotos } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
+type ChatData = {
+  ctx: Awaited<ReturnType<typeof getChatForUser>>;
+  msgs: Awaited<ReturnType<typeof messagesAfter>>;
+  state: Awaited<ReturnType<typeof getTxState>>;
+  photoUrl: string | null;
+};
+
+async function loadChat(chatId: number, userId: number): Promise<ChatData> {
+  const ctx = await getChatForUser(chatId, userId);
+  await expireStaleReservation(ctx.listing.id); // D-043 lazy check
+
+  const [msgs, state, photos] = await Promise.all([
+    messagesAfter(chatId, userId, 0),
+    getTxState(ctx.listing.id, userId),
+    getDb()
+      .select()
+      .from(listingPhotos)
+      .where(eq(listingPhotos.listingId, ctx.listing.id))
+      .orderBy(listingPhotos.sortOrder)
+      .limit(1),
+  ]);
+  await markChatRead(ctx.listing.id, userId);
+
+  return { ctx, msgs, state, photoUrl: photos[0]?.url ?? null };
+}
+
 export default async function ChatPage({
   params,
 }: {
@@ -25,45 +51,36 @@ export default async function ChatPage({
   const chatId = Number(idStr);
   if (!Number.isInteger(chatId)) notFound();
 
+  let data: ChatData;
   try {
-    const ctx = await getChatForUser(chatId, current.profile.id);
-    await expireStaleReservation(ctx.listing.id); // D-043 lazy check
-    const [msgs, state, photos] = await Promise.all([
-      messagesAfter(chatId, current.profile.id, 0),
-      getTxState(ctx.listing.id, current.profile.id),
-      getDb()
-        .select()
-        .from(listingPhotos)
-        .where(eq(listingPhotos.listingId, ctx.listing.id))
-        .orderBy(listingPhotos.sortOrder)
-        .limit(1),
-    ]);
-    await markChatRead(ctx.listing.id, current.profile.id);
-
-    return (
-      <ChatScreen
-        chatId={chatId}
-        meId={current.profile.id}
-        role={ctx.role}
-        otherName={ctx.role === "buyer" ? ctx.seller.fullName : ctx.buyer.fullName}
-        listing={{
-          id: ctx.listing.id,
-          title: ctx.listing.title,
-          priceInr: ctx.listing.priceInr,
-          mode: ctx.listing.mode,
-          photoUrl: photos[0]?.url ?? null,
-        }}
-        initialMessages={msgs.map((m) => ({
-          id: m.id,
-          senderId: m.senderId,
-          body: m.body,
-          at: m.createdAt.toISOString(),
-        }))}
-        initialState={state}
-      />
-    );
+    data = await loadChat(chatId, current.profile.id);
   } catch (err) {
     if (err instanceof DomainError) notFound();
     throw err;
   }
+
+  const { ctx, msgs, state, photoUrl } = data;
+
+  return (
+    <ChatScreen
+      chatId={chatId}
+      meId={current.profile.id}
+      role={ctx.role}
+      otherName={ctx.role === "buyer" ? ctx.seller.fullName : ctx.buyer.fullName}
+      listing={{
+        id: ctx.listing.id,
+        title: ctx.listing.title,
+        priceInr: ctx.listing.priceInr,
+        mode: ctx.listing.mode,
+        photoUrl,
+      }}
+      initialMessages={msgs.map((m) => ({
+        id: m.id,
+        senderId: m.senderId,
+        body: m.body,
+        at: m.createdAt.toISOString(),
+      }))}
+      initialState={state}
+    />
+  );
 }

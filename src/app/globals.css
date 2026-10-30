@@ -8,6 +8,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
+  --font-display: var(--font-fraunces);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -56,18 +57,24 @@
   --color-primary-active: var(--bl-primary-active);
   --color-primary-soft: var(--bl-primary-soft);
   --color-free: var(--bl-free);
+  --color-forest: var(--bl-forest);
+  --color-forest-deep: var(--bl-forest-deep);
+  --color-lime-soft: var(--bl-lime);
 }
 
 :root {
   /* BookLoop palette — UI_REFERENCE.md §2 (D-047, D-051). Warm off-white canvas, white cards, one green accent. */
   --bl-ink: #222222;
   --bl-body: #484848;
-  --bl-muted: #767676;
+  --bl-muted: #6b6b6b;
   --bl-surface-soft: #f4f2ec;
   --bl-hairline: #eceae3;
-  --bl-primary-active: #057a55;
+  --bl-primary-active: #045c42;
   --bl-primary-soft: #def7ec;
-  --bl-free: #e8590c;
+  --bl-free: #c2410c;
+  --bl-forest: #07231c;
+  --bl-forest-deep: #04170f;
+  --bl-lime: #baf5d4;
 
   --background: #faf9f5; /* warm off-white canvas (D-051) — cards stay pure white for a borderless lift */
   --foreground: var(--bl-ink);
@@ -75,7 +82,7 @@
   --card-foreground: var(--bl-ink);
   --popover: #ffffff;
   --popover-foreground: var(--bl-ink);
-  --primary: #0e9f6e; /* loop green — ONE primary action per screen */
+  --primary: #057a55; /* loop green, darkened to keep white text ≥ 4.5:1 */
   --primary-foreground: #ffffff;
   --secondary: var(--bl-surface-soft);
   --secondary-foreground: var(--bl-ink);
@@ -83,10 +90,10 @@
   --muted-foreground: var(--bl-muted);
   --accent: var(--bl-primary-soft);
   --accent-foreground: var(--bl-primary-active);
-  --destructive: #e02424;
+  --destructive: #c81e1e;
   --border: var(--bl-hairline);
   --input: var(--bl-hairline);
-  --ring: #0e9f6e;
+  --ring: #057a55;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -110,7 +117,7 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: #0e9f6e;
+  --primary: #057a55;
   --primary-foreground: #ffffff;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -143,6 +150,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: clip;
   }
   html {
     @apply font-sans;
@@ -161,4 +169,202 @@
   font-size: clamp(1.125rem, 1rem + 0.7vw, 1.5rem);
   line-height: 1.25;
   font-weight: 600;
+}
+
+/* ---------- Hero motion & surfaces (home) ---------- */
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
+  }
+}
+
+@keyframes hero-float-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -18px, 0) rotate(-1.5deg);
+  }
+}
+
+@keyframes hero-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-2deg);
+  }
+  50% {
+    transform: translate3d(6px, -14px, 0) rotate(2deg);
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hero-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@utility animate-hero-float {
+  animation: hero-float 6.5s ease-in-out infinite;
+}
+@utility animate-hero-float-slow {
+  animation: hero-float-slow 9s ease-in-out infinite;
+}
+@utility animate-hero-drift {
+  animation: hero-drift 11s ease-in-out infinite;
+}
+@utility animate-hero-rise {
+  animation: hero-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@utility animate-hero-glow {
+  animation: hero-glow 9s ease-in-out infinite;
+}
+@utility animate-marquee {
+  animation: marquee 55s linear infinite;
+}
+
+@utility hero-stage {
+  perspective: 1400px;
+  transform-style: preserve-3d;
+}
+
+@utility hero-tilt {
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* Depth layer inside the pointer-tilted scene (outer wrapper for float). */
+@utility hero-layer {
+  transform: translate3d(
+    calc(var(--px, 0) * 12px),
+    calc(var(--py, 0) * 12px),
+    0
+  );
+}
+
+@utility glass-card {
+  background: rgb(255 255 255 / 0.09);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  box-shadow:
+    0 24px 60px -28px rgb(0 0 0 / 0.7),
+    inset 0 1px 0 rgb(255 255 255 / 0.16);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+@utility text-gradient-loop {
+  background-image: linear-gradient(
+    100deg,
+    #e6fdf0 0%,
+    #9df3c6 35%,
+    #3ee0a1 70%,
+    #fbe7a1 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility hero-grid {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.055) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(
+    ellipse 85% 75% at 62% 38%,
+    black 25%,
+    transparent 78%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 85% 75% at 62% 38%,
+    black 25%,
+    transparent 78%
+  );
+}
+
+@utility hero-noise {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    mix-blend-mode: soft-light;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Edge fade so a horizontally scrolling rail reads as scrollable. */
+@utility scroll-fade {
+  mask-image: linear-gradient(to right, black calc(100% - 2rem), transparent);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black calc(100% - 2rem),
+    transparent
+  );
+}
+
+/* Escape the max-w container and span the viewport (clipped by <main>). */
+@utility bleed {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-float,
+  .animate-hero-float-slow,
+  .animate-hero-drift,
+  .animate-hero-rise,
+  .animate-hero-glow,
+  .animate-marquee {
+    animation: none !important;
+  }
+  .hero-tilt {
+    transition: none;
+    transform: none;
+  }
+  .hero-layer {
+    transform: none;
+  }
 }

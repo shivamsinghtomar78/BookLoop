@@ -52,7 +52,7 @@ export default async function NotificationsPage() {
               </div>
             );
             const target =
-              n.type === "chat_message"
+              n.type === "chat_message" || n.type === "confirm_handover"
                 ? "/chats"
                 : n.listingId
                   ? `/listings/${n.listingId}`
