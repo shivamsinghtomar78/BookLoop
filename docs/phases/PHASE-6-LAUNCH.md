@@ -63,7 +63,7 @@
 - [x] Decisions logged (D-057); launch-week feature requests go to PHASE-7, not the codebase
 
 ### The launch-blocking checklist (everything left, in order)
-1. **Vercel env vars** (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`=stable domain, `CHAT_JWT_SECRET`, `ADMIN_EMAILS`) → redeploy → I verify prod health + run the prod smoke suite.
+1. **Vercel env vars** — only secrets are strictly required: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `CHAT_JWT_SECRET` (if push chat is ever enabled) and `ADMIN_EMAILS`. Auth `baseURL`/`trustedOrigins` now derive from the deployment URL (D-063), so `BETTER_AUTH_URL`/`NEXT_PUBLIC_APP_URL` are optional; when a custom domain is attached, set both to it (explicit values win). Redeploy → verify prod health + run the prod smoke suite.
 2. **Key:** `UPLOADTHING_TOKEN` (photo uploads — blocks real listings!).
 3. **Realtime:** Vercel now uses REST polling (D-062 — serverless LISTEN leaked Neon connections). To restore push, host `realtime/server.ts` on an always-on Node service, set `NEXT_PUBLIC_REALTIME_URL` to it, and add the Vercel origin to `APP_ORIGINS`. Verify "⚡ live" in a prod chat after deploy.
 4. School: pickup point, book drive (CSV → import script), announcement date.

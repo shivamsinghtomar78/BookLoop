@@ -494,4 +494,14 @@ Every decision made during development goes in this file — big or small, produ
 
 ---
 
-*Next entry: D-063.*
+### D-063 — Auth origin derives from the deployment URL, not BETTER_AUTH_URL alone
+- **Date:** 2026-11-03
+- **Area:** Tech / Infra
+- **Decision:** `auth` now takes its `baseURL` from `siteUrl()` (deployment-aware: `NEXT_PUBLIC_APP_URL` → non-localhost `BETTER_AUTH_URL` → `VERCEL_PROJECT_PRODUCTION_URL` → `VERCEL_URL` → localhost). `trustedOrigins` is that canonical origin plus `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_URL`, `VERCEL_URL`, `VERCEL_BRANCH_URL` and `APP_ORIGINS`, deduped; localhost entries are dropped when the deployment is HTTPS. The `/api/photos` same-origin guard and alert-email links use `siteUrl()` too.
+- **Why:** On Vercel, `POST /api/auth/sign-in/email` answered `{"message":"Invalid origin","code":"INVALID_ORIGIN"}`, and the sign-in server action could only return "Couldn't log you in." `BETTER_AUTH_URL` was unset or still `http://localhost:3000`, so `baseURL`/`trustedOrigins` never contained `https://bookloop-tan.vercel.app`. Reading the platform URL removes the dashboard step for every deployment (production and previews) while still letting an explicit domain win.
+- **Instead of:** Hard-coding the Vercel host in code (breaks previews and a future custom domain), or requiring the dashboard env vars before auth can work at all (it did not survive migration between hosts).
+- **Status:** ✅ Active — verified in production: bogus credentials now reach the normal `INVALID_EMAIL_OR_PASSWORD` path.
+
+---
+
+*Next entry: D-064.*
