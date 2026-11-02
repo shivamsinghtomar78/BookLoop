@@ -7,6 +7,7 @@ import { getDb } from "@/db/client";
 import { bookAlerts, listings, notifications, users } from "@/db/schema";
 import { DomainError } from "@/services/listings";
 import { sendEmail } from "@/lib/email";
+import { siteUrl } from "@/lib/site-url";
 
 const MAX_ACTIVE_ALERTS = 10;
 
@@ -115,7 +116,7 @@ export async function matchAlertsForNewListing(listingId: number) {
     );
 
     // Best-effort emails, never blocking
-    const base = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+    const base = siteUrl();
     for (const m of perUser.values()) {
       void sendEmail(
         m.email,

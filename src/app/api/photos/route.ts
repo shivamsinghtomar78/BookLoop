@@ -10,6 +10,7 @@ import { photoBlobs } from "@/db/schema";
 import { ensurePhotoBlobTable } from "@/db/ensure";
 import { getCurrentUser } from "@/services/users";
 import { LIMITS } from "@/lib/constants";
+import { siteUrl } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
       if (h) hosts.add(h);
     }
     try {
+      hosts.add(new URL(siteUrl()).host);
       if (process.env.BETTER_AUTH_URL) hosts.add(new URL(process.env.BETTER_AUTH_URL).host);
       for (const o of (process.env.APP_ORIGINS ?? "").split(",")) {
         if (o.trim()) hosts.add(new URL(o.trim()).host);
