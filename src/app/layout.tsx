@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { HydrationMarker } from "@/components/shell/hydration-marker";
+import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -26,11 +27,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ??
-      process.env.BETTER_AUTH_URL ??
-      "http://localhost:3000",
-  ),
+  metadataBase: new URL(siteUrl()),
   title: {
     default: "BookLoop — school book exchange",
     template: "%s · BookLoop",

@@ -1,6 +1,6 @@
 # BookLoop — Application Architecture
 
-**Deployment target:** Vercel (only) + Neon Postgres (only database/infrastructure)
+**Deployment target:** Vercel (web) + Neon Postgres (database); chat push is optional via an always-on socket host (D-062), with REST polling as the default.
 **Goal:** an architecture simple enough to build fast, but structured so the **trial launch runs properly** and nothing needs a rewrite to scale to more schools.
 **Last updated:** 13 Sep 2026
 

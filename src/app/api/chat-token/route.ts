@@ -8,6 +8,17 @@ import { getCurrentUser } from "@/services/users";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Where the socket.io server lives (D-062):
+  // - explicit NEXT_PUBLIC_REALTIME_URL wins (always-on external host)
+  // - local dev: the standalone realtime/server.ts on :4001
+  // - on Vercel: disabled — a serverless function can't safely hold a
+  //   Postgres LISTEN (frozen instances leak connections). The chat UI
+  //   falls back to REST polling, which uses stateless HTTP queries.
+  const external = process.env.NEXT_PUBLIC_REALTIME_URL;
+  if (!external && process.env.VERCEL) {
+    return Response.json({ error: "realtime disabled" }, { status: 503 });
+  }
+
   const current = await getCurrentUser();
   if (!current) return Response.json({ error: "unauthorized" }, { status: 401 });
 
@@ -20,15 +31,9 @@ export async function GET() {
     .setExpirationTime("5m")
     .sign(new TextEncoder().encode(secret));
 
-  // Where the socket.io server lives (D-060):
-  // - explicit NEXT_PUBLIC_REALTIME_URL override wins (external host)
-  // - on Vercel: same origin, served by the api/socketio.ts function
-  // - local dev: the standalone realtime/server.ts on :4001
-  const target = process.env.NEXT_PUBLIC_REALTIME_URL
-    ? { url: process.env.NEXT_PUBLIC_REALTIME_URL, path: "/socket.io" }
-    : process.env.VERCEL
-      ? { url: "", path: "/api/socketio/socket.io" } // "" = same origin
-      : { url: "http://localhost:4001", path: "/socket.io" };
+  const target = external
+    ? { url: external, path: "/socket.io" }
+    : { url: "http://localhost:4001", path: "/socket.io" };
 
   return Response.json({ token, ...target });
 }

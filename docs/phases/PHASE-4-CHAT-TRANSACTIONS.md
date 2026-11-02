@@ -57,8 +57,8 @@
 - [x] Polling economics: polling fully pauses while the socket is live; fallback stays within ARCHITECTURE.md §6 budgets
 - [x] Decisions logged: D-055 (socket.io realtime, supersedes half of D-022)
 
-### Realtime deployment note *(updated by D-060)*
-Realtime now deploys **with the app on Vercel**: `api/socketio.ts` is a vanilla Vercel Function exporting the Socket.IO `http.Server` (Vercel Functions support WebSockets on Fluid Compute). Same-origin, no extra host, no CORS. `realtime/server.ts` remains the local-dev twin (`npm run realtime`, :4001) since root `api/` functions don't run under `next dev`; `NEXT_PUBLIC_REALTIME_URL` stays as an optional external-host override. The D-037 polling fallback still covers any socket gap.
+### Realtime deployment note *(corrected by D-062)*
+An earlier revision hosted Socket.IO inside a Vercel Function (`api/socketio.ts`). That is removed: each 300 s reconnect could leave a frozen instance holding a Postgres `LISTEN` connection, and enough churn exhausted Neon's 104-connection limit, taking the whole site down. `realtime/server.ts` is the push-only socket host (run it on an always-on Node service; `NEXT_PUBLIC_REALTIME_URL` points the browser at it). Without that host, Vercel uses the D-037 REST polling fallback — same messages, no persistent DB connection.
 
 ## Revision 2026-10-31 — four-gate reservation lifecycle (D-061)
 Manual production testing showed a single buyer confirmation closing the whole

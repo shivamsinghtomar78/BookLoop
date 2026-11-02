@@ -472,7 +472,7 @@ Every decision made during development goes in this file — big or small, produ
 - **Decision:** The Socket.IO server deploys **inside the Vercel project** as a root-level vanilla function (`api/socketio.ts`) exporting an `http.Server` — the platform's documented pattern now that Vercel Functions support WebSockets on Fluid Compute. Same push-only design as before (writes in server actions → `pg_notify`; each function instance holds its own LISTEN while it has sockets, started lazily on first connection, so fan-out is correct across instances and an idle deploy holds no DB session). Client uses `transports: ["websocket"]` only (HTTP long-polling doesn't work on Vercel Functions) with `path /api/socketio/socket.io`, resolved per environment by `/api/chat-token`: explicit `NEXT_PUBLIC_REALTIME_URL` override → external host; on Vercel → same origin; locally → the standalone `realtime/server.ts` twin on :4001 (kept for `next dev`, where root `api/` functions don't run). Connections close at the function's max duration (300s) — socket.io auto-reconnect + our re-join/refetch + the D-037 polling fallback cover it. **No separate realtime host needed.**
 - **Why:** D-055's premise ("socket.io can't run on Vercel") was outdated platform knowledge, flagged by the Vercel plugin's 2026 knowledge update and confirmed against the vercel-functions docs. One deploy target instead of two, and same-origin removes the CORS surface. Verified: websocket-only client connects/joins and bad tokens are refused against the shared server logic.
 - **Instead of:** Hosting `realtime/server.ts` on Render/Railway (D-055's deployment plan — no longer necessary; still possible via the env override if ever wanted).
-- **Status:** ✅ Active (supersedes D-055's deployment note; D-055's push-only architecture unchanged)
+- **Status:** ⛔ Superseded by D-062 — serverless instances leaked Postgres `LISTEN` connections until Neon refused all logins.
 
 ### D-061 — Four-gate reservation lifecycle + lazy additive schema on live prod
 - **Date:** 2026-10-31
@@ -483,6 +483,14 @@ Every decision made during development goes in this file — big or small, produ
 - **Instead of:** A separate `transaction_events` table (more joins and no simpler UI) or a status enum on `transactions` (still needs actor guards; timestamps are what the stepper renders). Manual migration was ruled out because production is live and the QA constraint forbids risky prod DDL.
 - **Status:** ✅ Active
 
+### D-062 — No Postgres LISTEN inside Vercel Functions; polling by default, external socket host optional
+- **Date:** 2026-11-03
+- **Area:** Tech / Infra
+- **Decision:** Delete the root `api/socketio.ts` Vercel Function and stop resolving the browser to it. `/api/chat-token` now returns **503 "realtime disabled"** on Vercel unless `NEXT_PUBLIC_REALTIME_URL` names an always-on socket.io host; the chat UI's existing REST polling (D-037) carries messages in that case. Push can be re-enabled without code changes by pointing `NEXT_PUBLIC_REALTIME_URL` at a persistent host (the InstaCloud `realtime` service or `realtime/server.ts` on Render/Railway) and adding the Vercel origin to that host's `APP_ORIGINS`.
+- **Why:** Production Vercel returned the global error boundary with Neon `53300 / 08P01: sorry, too many clients already`. A 0.25 CU Neon compute allows 104 connections (7 reserved), and the serverless socket function reconnected every 300 s; each reconnect could land on a new frozen instance that still held its `pg` LISTEN connection, so over a few hours the leak consumed every slot — including the HTTP driver's login path used by normal page queries. A persistent process holds one bounded listener; a serverless one cannot be trusted to close it.
+- **Instead of:** Raising Neon's connection limit (a recurring cost that only delays the leak), keeping the serverless LISTEN and adding cleanup hooks (Vercel freezes instances without running them), or moving chat to a managed pub/sub service (a larger change; the polling fallback already exists and is adequate for one school).
+- **Status:** ✅ Active — supersedes D-060's same-origin deployment note; D-055's push-only architecture and D-037's polling fallback are unchanged.
+
 ---
 
-*Next entry: D-062.*
+*Next entry: D-063.*
