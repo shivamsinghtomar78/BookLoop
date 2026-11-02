@@ -78,12 +78,16 @@ export function PhotoUploader({
       setUploading(false);
       setProgress(0);
     },
-    onUploadError: (e) => {
-      setUploading(false);
-      setProgress(0);
-      toast.error(e.message || "Upload failed — try again");
-    },
+    // pick() falls back to /api/photos when startUpload yields nothing, so a
+    // missing/expired UploadThing token must not strand a seller here.
+    onUploadError: (e) => console.warn("[uploadthing]", e.message),
   });
+
+  async function uploadLocally(files: File[]) {
+    const prepared = await Promise.all(files.map((f) => shrinkImage(f)));
+    const urls = await uploadLocal(prepared, setProgress);
+    onChange([...photos, ...urls].slice(0, LIMITS.maxPhotosPerListing));
+  }
 
   async function pick(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -98,11 +102,10 @@ export function PhotoUploader({
     setProgress(0);
     try {
       if (mode === "local") {
-        const prepared = await Promise.all(selected.map((f) => shrinkImage(f)));
-        const urls = await uploadLocal(prepared, setProgress);
-        onChange([...photos, ...urls].slice(0, LIMITS.maxPhotosPerListing));
+        await uploadLocally(selected);
       } else {
-        await startUpload(selected);
+        const res = await startUpload(selected).catch(() => undefined);
+        if (!res) await uploadLocally(selected);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed — try again");
