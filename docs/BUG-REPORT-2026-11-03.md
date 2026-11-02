@@ -195,5 +195,8 @@ accounts and their chats/transactions).
   - logout: guest **Log in** appears immediately, no reload
   - chat: **0** `/api/chat-token` requests; REST polling still fires
   - closed chat still correctly hides the composer
-- Production re-verification of BUG-01/BUG-02 requires deploying this change
-  (Vercel deploys on push to `main`).
+- Production re-verification on https://bookloop-tan.vercel.app after deploying
+  commit `7578ba4` — 5/5 checks in `artifacts/local-verify.mjs`:
+  - logout: guest **Log in** appears immediately, no reload
+  - chat: **0** `/api/chat-token` requests; REST polling still fires
+  - closed chat still correctly hides the composer
