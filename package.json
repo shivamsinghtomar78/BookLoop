@@ -34,6 +34,7 @@
     "@neon/functions": "^0.10.0",
     "@neondatabase/serverless": "^1.1.0",
     "@uploadthing/react": "^7.3.3",
+    "@vercel/analytics": "^2.0.1",
     "better-auth": "^1.7.14",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",

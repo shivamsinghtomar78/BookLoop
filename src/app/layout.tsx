@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { HydrationMarker } from "@/components/shell/hydration-marker";
 import { siteUrl } from "@/lib/site-url";
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <HydrationMarker />
         {children}
         <Toaster position="top-center" />
+        <Analytics />
       </body>
     </html>
   );
