@@ -89,12 +89,31 @@ io.on("connection", (socket) => {
 
 // LISTEN chat_events on a dedicated DIRECT connection (this is a persistent
 // process — unlike serverless, holding a LISTEN session here is fine).
+// Reconnects back off exponentially: a saturated database must not be hammered
+// with a connect attempt every 2s (D-062 — that kept Neon awake and prevented
+// the compute from idling back to a clean state).
+const MAX_BACKOFF = 60_000;
+let reconnectDelay = 2_000;
+let reconnectTimer: NodeJS.Timeout | undefined;
+
 function startListener() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = undefined;
+  }
   const listener = new Client({ connectionString: DB_UNPOOLED });
-  listener.on("error", (err) => {
-    console.error("[listener] connection error — reconnecting", err.message);
-    setTimeout(startListener, 2000);
-  });
+  let retried = false;
+  const retry = (err: Error) => {
+    if (retried) return;
+    retried = true;
+    void listener.end().catch(() => {});
+    console.error(
+      `[listener] ${err.message} — retrying in ${reconnectDelay / 1000}s`,
+    );
+    reconnectTimer = setTimeout(startListener, reconnectDelay);
+    reconnectDelay = Math.min(reconnectDelay * 2, MAX_BACKOFF);
+  };
+  listener.on("error", retry);
   listener.on("notification", (msg) => {
     if (!msg.payload) return;
     try {
@@ -111,11 +130,11 @@ function startListener() {
   listener
     .connect()
     .then(() => listener.query("LISTEN chat_events"))
-    .then(() => console.log("LISTENing on chat_events"))
-    .catch((err) => {
-      console.error("[listener] connect failed — retrying", err.message);
-      setTimeout(startListener, 2000);
-    });
+    .then(() => {
+      reconnectDelay = 2_000;
+      console.log("LISTENing on chat_events");
+    })
+    .catch(retry);
 }
 startListener();
 
