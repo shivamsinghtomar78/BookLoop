@@ -21,6 +21,10 @@ import { listingPhotos } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
+// Vercel can't host the socket server without an external realtime URL (D-062),
+// so skip the token call entirely there and go straight to REST polling.
+const REALTIME_ENABLED = !!process.env.NEXT_PUBLIC_REALTIME_URL || !process.env.VERCEL;
+
 type ChatData = {
   ctx: Awaited<ReturnType<typeof getChatForUser>>;
   msgs: Awaited<ReturnType<typeof messagesAfter>>;
@@ -91,6 +95,7 @@ export default async function ChatPage({
           at: m.createdAt.toISOString(),
         }))}
         initialState={state}
+        realtime={REALTIME_ENABLED}
       />
     </ChatShell>
   );

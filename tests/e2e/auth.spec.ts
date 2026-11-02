@@ -82,6 +82,7 @@ test.describe("signed-in session", () => {
     await gotoHydrated(page, "/profile");
     await page.getByRole("button", { name: /^Log out$/ }).first().click();
     await expect(page).toHaveURL(new URL("/", BASE_URL).toString());
+    await expect(page.getByRole("button", { name: /^Log in$/ }).first()).toBeVisible();
     await page.goto("/sell");
     await expect(page).toHaveURL(new URL("/", BASE_URL).toString());
   });

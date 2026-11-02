@@ -54,6 +54,7 @@ export function ChatScreen(props: {
   };
   initialMessages: Msg[];
   initialState: TxState;
+  realtime?: boolean;
 }) {
   const router = useRouter();
   const [msgs, setMsgs] = useState<Msg[]>(props.initialMessages);
@@ -98,6 +99,7 @@ export function ChatScreen(props: {
 
   // ---- socket.io push (D-055), with reconnect handled by the library ----
   useEffect(() => {
+    if (!props.realtime) return;
     let cancelled = false;
 
     async function connect() {
@@ -162,7 +164,7 @@ export function ChatScreen(props: {
       socketRef.current?.disconnect();
       socketRef.current = null;
     };
-  }, [props.chatId, append, refetch]);
+  }, [props.chatId, props.realtime, append, refetch]);
 
   // Client clock for relative-age hints; starts after mount so render stays pure.
   useEffect(() => {

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuthSheet } from "@/components/auth/auth-sheet";
+import { useSession } from "@/lib/auth-client";
 import { signOutAction } from "@/app/(auth)/actions";
 
 export function GuestProfileButtons() {
@@ -29,6 +30,7 @@ export function GuestProfileButtons() {
 
 export function LogoutButton() {
   const router = useRouter();
+  const { refetch } = useSession();
   const [busy, setBusy] = useState(false);
   return (
     <Button
@@ -38,6 +40,9 @@ export function LogoutButton() {
         setBusy(true);
         const res = await signOutAction();
         if (res.ok) {
+          // Clear the shared client session atom too — without this the header
+          // keeps rendering as signed-in (no Log in / Sign up) until a reload.
+          await refetch();
           toast.success("Logged out");
           router.push("/");
           router.refresh();
