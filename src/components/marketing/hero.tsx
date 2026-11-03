@@ -4,8 +4,9 @@
 import { Recycle, ShieldCheck } from "lucide-react";
 import { HeroCta } from "@/components/marketing/hero-cta";
 import { HeroMarquee } from "@/components/marketing/hero-marquee";
-import { HeroScene, type HeroPhoto } from "@/components/marketing/hero-scene";
+import type { HeroPhoto } from "@/components/marketing/hero-photo";
 import { HeroSearch } from "@/components/marketing/hero-search";
+import { BookloopHero } from "@/components/marketing/stageshow/BookloopHero";
 import type { ImpactStats } from "@/services/impact";
 
 const number = new Intl.NumberFormat("en-IN");
@@ -88,10 +89,13 @@ export function Hero({
           </div>
 
           <div className="order-3 lg:order-2">
-            <HeroScene
-              image="/images/hero/student-books.webp"
-              thumbs={photos.slice(0, 2)}
-            />
+            <div
+              aria-hidden="true"
+              inert
+              className="bookloop-frame animate-hero-rise relative mx-auto w-full max-w-[600px] overflow-hidden rounded-[2rem] border border-white/10 bg-forest shadow-[0_60px_140px_-50px_rgba(0,0,0,0.9)]"
+            >
+              <BookloopHero />
+            </div>
           </div>
           <HeroSearch />
         </div>

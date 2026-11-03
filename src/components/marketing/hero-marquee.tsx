@@ -2,7 +2,7 @@
 // duplicated once for a seamless CSS loop and paused on hover.
 
 import Image from "next/image";
-import type { HeroPhoto } from "@/components/marketing/hero-scene";
+import type { HeroPhoto } from "@/components/marketing/hero-photo";
 
 export function HeroMarquee({
   photos,

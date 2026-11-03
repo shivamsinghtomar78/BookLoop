@@ -10,7 +10,7 @@ import { Departments } from "@/components/marketing/departments";
 import { Hero } from "@/components/marketing/hero";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { ShopByClass } from "@/components/marketing/shop-by-class";
-import type { HeroPhoto } from "@/components/marketing/hero-scene";
+import type { HeroPhoto } from "@/components/marketing/hero-photo";
 import {
   activeListingsByMode,
   activeListingsForClass,

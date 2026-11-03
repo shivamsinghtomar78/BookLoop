@@ -16,6 +16,10 @@ const eslintConfig = defineConfig([
     "artifacts/**",
     "playwright-report/**",
     "test-results/**",
+    // Local agent tooling and skill scaffolding.
+    ".qoder/**",
+    // Vendored Stageshow kit: third-party primitives kept as shipped.
+    "src/components/marketing/stageshow/kit/**",
   ]),
 ]);
 

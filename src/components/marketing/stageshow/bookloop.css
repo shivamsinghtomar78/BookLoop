@@ -1,0 +1,909 @@
+/* BookLoop's real tokens, mapped onto the kit: forest ground, warm off-white,
+   loop green, hairline beige, Inter for the UI and Fraunces for the cover. */
+
+.bookloop-frame {
+  container-type: inline-size;
+}
+
+.bl {
+  --bl-ground: #07231c;
+  background: var(--bl-ground);
+  /* The stage measures itself on hydration; deriving the frame's height from
+     its width keeps the server render and the live stage the same size, so the
+     hero doesn't shift as the kit settles. */
+  height: auto !important;
+  aspect-ratio: 600 / 624;
+}
+
+@container (max-width: 559px) {
+  .bl {
+    aspect-ratio: 358 / 755;
+    max-height: 755px;
+  }
+}
+
+/* In the hand the card is the phone: black behind its cropped sides, so no
+   forest frame is left around the device, and the loop's cover matches it */
+.bl:has(.bl-phone) {
+  --bl-ground: #111113;
+  background: #111113;
+}
+
+.bl .ss-stage {
+  --ss-accent: #057a55;
+  --ss-accent-soft: rgba(5, 122, 85, 0.12);
+  --ss-accent-text: #045c42;
+  --ss-canvas: #faf9f5;
+  --ss-surface: #ffffff;
+  --ss-chrome: #ffffff;
+  --ss-text-strong: #222222;
+  --ss-text: #484848;
+  --ss-text-faint: #6b6b6b;
+  --ss-icon: #6b6b6b;
+  --ss-line: #eceae3;
+  --ss-line-faint: #f2f0e9;
+  --ss-well: #f4f2ec;
+  --ss-primary-soft: #def7ec;
+  --ss-primary-active: #045c42;
+  --ss-radius-window: 12px;
+  --ss-font: var(--font-sans, Inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  overflow: hidden;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* The loop's cover: the stage's own ground over the scene, so the reset can
+   happen out of sight without a plate or a flash */
+.bl-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--bl-ground);
+  /* Quick enough that the seam reads as a blink, never as an empty frame */
+  transition: opacity 0.14s ease;
+}
+
+/* The scene sits under the shade and fades with it, so the reset behind the
+   cover is a fade rather than a cut */
+.bl-scene {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.14s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bl-scene {
+    transition: none;
+  }
+}
+
+/* A corner bleed: the window runs 40px past the right edge, so its right
+   chrome is the crop, and the app inside lays out to the 576px that shows. */
+.bl-browser {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  width: 616px;
+  height: 576px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 48px 90px -28px rgba(0, 0, 0, 0.7),
+    0 10px 28px -12px rgba(0, 0, 0, 0.55);
+}
+
+/* The compact design is the app in a hand: the phone is the card, filling it
+   edge to edge, so the device itself is the frame */
+.bl-phone {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* No pointer on the phone design: the story belongs to a thumb, and the
+   compact card has no gutter for a cursor to rest in */
+.bl .ss-stage[data-layout='compact'] .ss-cursor {
+  display: none;
+}
+
+/* ---- The app, top to bottom ---- */
+
+.bl-app {
+  display: flex;
+  flex-direction: column;
+  width: 576px;
+  height: 100%;
+}
+
+.bl-app--phone {
+  width: 100%;
+  font-family: var(--ss-font);
+}
+
+.bl-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  height: 60px;
+  padding: 0 16px;
+  background: var(--ss-surface);
+  border-bottom: 1px solid var(--ss-line);
+}
+
+.bl-cover {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(152deg, #0b6b4e 0%, #06432f 100%);
+  color: #e6fbf0;
+  font-family: var(--font-fraunces, Fraunces), Georgia, 'Times New Roman', serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.bl-id {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bl-title {
+  overflow: hidden;
+  color: var(--ss-text-strong);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bl-sub {
+  overflow: hidden;
+  color: var(--ss-text-faint);
+  font-size: 11px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bl-live {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  color: var(--ss-accent);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.bl-live i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ss-accent);
+  box-shadow: 0 0 0 3px rgba(5, 122, 85, 0.14);
+  animation: bl-live 2.4s ease-in-out infinite;
+}
+
+@keyframes bl-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ---- The deal's gate: the five-step tracker on the web, the status line and
+   five dots the mobile app shows ---- */
+
+.bl-tracker {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  padding: 12px 16px 13px;
+  background: #f6f4ee;
+  border-bottom: 1px solid var(--ss-line);
+}
+
+.bl-status {
+  width: 100%;
+  margin: 0;
+  grid-template-columns: minmax(0, 1fr);
+  color: var(--ss-text-faint);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.bl-status__line {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bl-steps {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bl-step {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.bl-dot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f0eee7;
+  color: #8f8c82;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.bl-step[data-done] .bl-dot {
+  background: var(--ss-accent);
+  color: #fff;
+}
+
+.bl-step[data-current] .bl-dot {
+  background: var(--ss-primary-soft);
+  color: var(--ss-primary-active);
+  box-shadow: inset 0 0 0 1px var(--ss-accent);
+}
+
+.bl-step[data-done] .bl-dot svg {
+  animation: bl-tick 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes bl-tick {
+  from { opacity: 0; transform: scale(0.4); }
+}
+
+.bl-lbl {
+  width: 100%;
+  overflow: hidden;
+  color: var(--ss-text-faint);
+  font-size: 9.5px;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bl-step[data-done] .bl-lbl {
+  color: var(--ss-text);
+}
+
+.bl-step[data-current] .bl-lbl {
+  color: var(--ss-text-strong);
+  font-weight: 600;
+}
+
+/* The phone's tracker: the same five steps as one row of dots */
+.bl-mini {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bl-mini__step {
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.bl-mini__step:last-child {
+  flex: none;
+}
+
+.bl-mini__dot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e7e3d8;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px #dad5c8;
+  transition:
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.bl-mini__step[data-done] .bl-mini__dot {
+  background: var(--ss-accent);
+  box-shadow: none;
+}
+
+.bl-mini__step[data-done] .bl-mini__dot svg {
+  animation: bl-tick 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bl-mini__step[data-current] .bl-mini__dot {
+  background: var(--ss-primary-soft);
+  box-shadow: inset 0 0 0 1.5px var(--ss-accent);
+}
+
+.bl-mini__line {
+  flex: 1;
+  height: 2px;
+  margin: 0 4px;
+  border-radius: 1px;
+  background: #e7e3d8;
+  transition: background 0.3s ease;
+}
+
+.bl-mini__step[data-done] .bl-mini__line {
+  background: var(--ss-accent);
+}
+
+/* ---- The conversation ---- */
+
+/* A long conversation clips at the tracker's rule, as a scrolled chat does,
+   so the thread starts at the very top of the pane. The wrap itself stays
+   visible so the reply can rise out from under the footer unclipped; the
+   thread's own top clip does the cropping. */
+.bl-thread-wrap {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 0 24px 26px;
+  overflow: visible;
+  background: #f6f3ec;
+}
+
+.bl-thread {
+  --ss-thread-size: 13.5px;
+  --ss-me: #057a55;
+  --ss-me-text: #ffffff;
+  --ss-them: #ffffff;
+  --ss-them-text: #222222;
+  flex: 1;
+}
+
+/* WhatsApp's mark: small, in the bubble's last line, never a line of its own */
+.bl-time {
+  margin-left: 7px;
+  font-size: 9px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  opacity: 0.62;
+}
+
+/* A stamp that arrives mid-conversation fades up into the thread */
+.bl-enter {
+  animation: bl-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes bl-rise {
+  from { opacity: 0; transform: translateY(5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bl-enter { animation: none; }
+  .bl-mini__step[data-done] .bl-mini__dot svg { animation: none; }
+}
+
+/* ---- Deal actions ---- */
+
+.bl-foot {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--ss-surface);
+  border-top: 1px solid var(--ss-line);
+}
+
+.bl-actions {
+  display: flex;
+  height: 54px;
+  align-items: center;
+}
+
+.bl-actions .ss-states {
+  flex: 1;
+  width: 100%;
+}
+
+/* The action bar swaps whole rows in one box: the panel fills it and holds
+   still, so the buttons that stay (the ghost, the primary) land exactly where
+   they were instead of snapping in with the kit's label travel */
+.bl-actions .ss-states__item {
+  width: 100%;
+  transform: none;
+  transition: opacity 0.15s ease;
+}
+
+.bl-actions .ss-states__item[data-on] {
+  transform: none;
+  transition: opacity 0.22s ease-out 0.06s;
+}
+
+.bl-gate {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.bl-helper {
+  margin: 0;
+  color: var(--ss-text-faint);
+  font-size: 10.5px;
+  line-height: 1.3;
+}
+
+.bl-btns {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+}
+
+/* Every gate draws the same row: the action takes the room, its quiet
+   alternative keeps one width so the swap never nudges it */
+.bl-btns .bl-btn--primary {
+  flex: 1;
+}
+
+.bl-btns .bl-btn--ghost {
+  flex: none;
+  width: 96px;
+  padding: 0;
+}
+
+.bl-btn {
+  height: 32px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  will-change: transform;
+  transition:
+    filter 0.15s ease,
+    transform 0.12s ease,
+    background 0.15s ease;
+}
+
+.bl-btn--primary {
+  background: var(--ss-accent);
+  color: #fff;
+}
+
+.bl-btn--primary:disabled {
+  background: #ece9e1;
+  color: #8f8c82;
+  cursor: default;
+}
+
+.bl-btn--ghost {
+  background: transparent;
+  color: var(--ss-text);
+  box-shadow: inset 0 0 0 1px var(--ss-line);
+}
+
+.bl-btn--primary[data-hover] {
+  filter: brightness(1.08);
+}
+
+.bl-btn--ghost[data-hover] {
+  background: var(--ss-canvas);
+}
+
+.bl-btn[data-pressed] {
+  transform: translateY(1px) scale(0.995);
+  filter: brightness(0.96);
+}
+
+.bl-rate {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 8px 12px 16px;
+  border-radius: 14px;
+  background: #f6f3ec;
+}
+
+.bl-rate__q {
+  margin: 0;
+  color: var(--ss-text-strong);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.bl-rate__btns {
+  display: flex;
+  gap: 6px;
+}
+
+.bl-iconbtn {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ss-text);
+  cursor: pointer;
+  will-change: transform;
+  box-shadow: inset 0 0 0 1px var(--ss-line);
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease,
+    color 0.15s ease;
+}
+
+.bl-iconbtn[data-hover] {
+  background: #f1efe8;
+  color: var(--ss-text-strong);
+}
+
+.bl-iconbtn[data-pressed] {
+  transform: scale(0.94);
+}
+
+/* The record the gate leaves behind: the loop is closed, in the band the
+   rate row vacated */
+.bl-outcome {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #f6f3ec;
+}
+
+.bl-outcome__mark {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ss-accent);
+  color: #fff;
+}
+
+.bl-actions .ss-states__item[data-on] .bl-outcome__mark {
+  animation: bl-pop 0.3s cubic-bezier(0.22, 1.4, 0.36, 1);
+}
+
+@keyframes bl-pop {
+  from { opacity: 0; transform: scale(0.4); }
+}
+
+.bl-outcome__text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.bl-outcome__title {
+  color: var(--ss-text-strong);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.bl-outcome__sub {
+  overflow: hidden;
+  color: var(--ss-text-faint);
+  font-size: 10.5px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bl-actions .ss-states__item[data-on] .bl-outcome__mark { animation: none; }
+}
+
+/* The composer is its own area, under the deal's gate, as a chat draws it */
+.bl-divide {
+  height: 1px;
+  margin: 0 -16px;
+  background: var(--ss-line);
+}
+
+.bl-composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bl-field {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--ss-line);
+  border-radius: 999px;
+  background: var(--ss-canvas);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.bl-field[data-focus] {
+  border-color: var(--ss-accent);
+  box-shadow: 0 0 0 3px rgba(5, 122, 85, 0.12);
+}
+
+.bl-field__text {
+  overflow: hidden;
+  color: var(--ss-text-strong);
+  font-size: 12.5px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bl-ph {
+  position: absolute;
+  left: 16px;
+  color: #9c998f;
+  font-size: 12.5px;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.bl-ph[data-hide] {
+  opacity: 0;
+}
+
+.bl-caret {
+  display: inline-block;
+  width: 1px;
+  height: 13px;
+  margin-left: 1px;
+  background: var(--ss-accent);
+  vertical-align: -2px;
+  animation: bl-blink 1s steps(1) infinite;
+}
+
+@keyframes bl-blink {
+  50% { opacity: 0; }
+}
+
+.bl-send {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #eceae3;
+  color: #a6a399;
+  will-change: transform;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.12s ease;
+}
+
+.bl-send[data-active] {
+  background: var(--ss-accent);
+  color: #fff;
+}
+
+.bl-send[data-pressed] {
+  transform: scale(0.92);
+}
+
+/* The cursor's resting spot: below the window, or in the chat's open space */
+.bl-rest {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* ---- The same app at true iOS size, inside the phone ---- */
+
+.bl-app--phone .bl-head {
+  gap: 12px;
+  height: 72px;
+  padding: 0 20px;
+}
+
+.bl-app--phone .bl-cover {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 20px;
+}
+
+.bl-app--phone .bl-title {
+  font-size: 17px;
+}
+
+.bl-app--phone .bl-sub {
+  font-size: 14px;
+}
+
+.bl-app--phone .bl-live {
+  gap: 6px;
+  font-size: 14px;
+}
+
+.bl-app--phone .bl-live i {
+  width: 6px;
+  height: 6px;
+  box-shadow: 0 0 0 3.5px rgba(5, 122, 85, 0.14);
+}
+
+/* Mobile's tracker: the gate's name, then the five steps as dots */
+.bl-app--phone .bl-tracker {
+  height: auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+  padding: 16px 20px;
+}
+
+.bl-app--phone .bl-status {
+  flex: none;
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+
+.bl-app--phone .bl-mini__dot {
+  width: 13px;
+  height: 13px;
+}
+
+.bl-app--phone .bl-thread-wrap {
+  padding: 0 16px 20px;
+}
+
+.bl-app--phone .bl-thread {
+  --ss-thread-size: 16px;
+  mask-image: none;
+}
+
+.bl-app--phone .bl-foot {
+  gap: 10px;
+  padding: 12px 20px 30px;
+}
+
+.bl-app--phone .bl-actions {
+  height: 92px;
+}
+
+.bl-app--phone .bl-gate {
+  gap: 8px;
+}
+
+.bl-app--phone .bl-helper {
+  font-size: 14px;
+}
+
+.bl-app--phone .bl-btns {
+  gap: 10px;
+}
+
+.bl-app--phone .bl-btns .bl-btn--ghost {
+  width: 112px;
+  padding: 0;
+}
+
+.bl-app--phone .bl-btn {
+  height: 44px;
+  border-radius: 12px;
+  font-size: 15px;
+}
+
+/* The rating is a row of the action area, not a card, on a phone */
+.bl-app--phone .bl-rate {
+  background: transparent;
+  padding: 0;
+}
+
+.bl-app--phone .bl-rate__q {
+  font-size: 16px;
+}
+
+.bl-app--phone .bl-iconbtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.bl-app--phone .bl-outcome {
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.bl-app--phone .bl-outcome__mark {
+  width: 30px;
+  height: 30px;
+}
+
+.bl-app--phone .bl-outcome__title {
+  font-size: 15px;
+}
+
+.bl-app--phone .bl-outcome__sub {
+  font-size: 13px;
+}
+
+.bl-app--phone .bl-divide {
+  margin: 0 -20px;
+}
+
+.bl-app--phone .bl-composer {
+  gap: 10px;
+}
+
+.bl-app--phone .bl-field {
+  height: 46px;
+  padding: 0 22px;
+}
+
+.bl-app--phone .bl-ph {
+  left: 22px;
+}
+
+.bl-app--phone .bl-field__text,
+.bl-app--phone .bl-ph {
+  font-size: 16px;
+}
+
+.bl-app--phone .bl-caret {
+  height: 18px;
+  vertical-align: -3px;
+}
+
+.bl-app--phone .bl-send {
+  width: 40px;
+  height: 40px;
+}
