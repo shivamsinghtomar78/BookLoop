@@ -67,11 +67,3 @@ export const PRICE_HINTS: Record<
   competitive: { lo: 150, hi: 400 },
   novel: { lo: 50, hi: 150 },
 };
-
-// Condition picker cards (Task 2.2) — emoji stand in for example photos in the prototype.
-export const CONDITION_EMOJI: Record<string, string> = {
-  like_new: "✨",
-  good: "👍",
-  fair: "📖",
-  worn: "📚",
-};

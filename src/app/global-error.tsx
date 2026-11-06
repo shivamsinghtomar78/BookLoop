@@ -28,7 +28,24 @@ export default function GlobalError({
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        <p style={{ fontSize: 44, margin: 0 }}>📚</p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            background: "#def7ec",
+            color: "#057a55",
+            fontSize: 20,
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+          }}
+          aria-hidden
+        >
+          BL
+        </div>
         <h1 style={{ fontSize: 24, margin: 0 }}>BookLoop hit a snag</h1>
         <p style={{ maxWidth: 360, color: "#484848" }}>
           Your books are safe. Reload the page — if it keeps happening, tell us

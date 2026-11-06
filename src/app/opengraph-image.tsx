@@ -31,10 +31,27 @@ export default function OpengraphImage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 34,
+              gap: 4,
             }}
           >
-            📚
+            <div
+              style={{
+                width: 11,
+                height: 26,
+                borderRadius: 3,
+                background: "#baf5d4",
+                transform: "skewY(-7deg)",
+              }}
+            />
+            <div
+              style={{
+                width: 11,
+                height: 26,
+                borderRadius: 3,
+                background: "#baf5d4",
+                transform: "skewY(7deg)",
+              }}
+            />
           </div>
           <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: -1, display: "flex" }}>
             Book<span style={{ color: "#baf5d4" }}>Loop</span>

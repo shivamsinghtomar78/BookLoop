@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 export function DonorShareButton({ count }: { count: number }) {
   async function share() {
-    const text = `🌱 I gave ${count === 1 ? "a book" : `${count} books`} a second life on BookLoop 📚 — one book, many students!`;
+    const text = `I gave ${count === 1 ? "a book" : `${count} books`} a second life on BookLoop — one book, many students.`;
     try {
       if (navigator.share) {
         await navigator.share({ title: "BookLoop", text });

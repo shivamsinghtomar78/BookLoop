@@ -33,7 +33,7 @@ export function HeaderAuth({ dark = false }: { dark?: boolean }) {
         size="sm"
         onClick={() => open({ mode: "login" })}
         className={cn(
-          "hidden rounded-full px-3.5 text-sm sm:inline-flex",
+          "rounded-full px-2.5 text-sm sm:px-3.5",
           dark
             ? "text-white/75 hover:bg-white/10 hover:text-white"
             : "text-body hover:bg-surface-soft hover:text-ink",
@@ -45,7 +45,7 @@ export function HeaderAuth({ dark = false }: { dark?: boolean }) {
         size="sm"
         onClick={() => open({ mode: "signup" })}
         className={cn(
-          "rounded-full px-4 text-sm",
+          "rounded-full px-3.5 text-sm sm:px-4",
           dark
             ? "bg-lime-soft text-forest shadow-[0_10px_30px_-14px_rgba(186,245,212,0.9)] hover:bg-[#d6fbe6]"
             : "bg-primary text-primary-foreground shadow-[0_10px_24px_-14px_rgba(14,159,110,0.9)] hover:bg-primary-active",

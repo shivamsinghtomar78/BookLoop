@@ -3,8 +3,9 @@
 // profile-aware. Hybrid layout: horizontal shelves < md, grids md+ (D-054).
 
 import Link from "next/link";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight, BookOpen, ChevronRight } from "lucide-react";
 import { BookCard, type BookCardData } from "@/components/book-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { InstallPrompt } from "@/components/install-prompt";
 import { Departments } from "@/components/marketing/departments";
 import { Hero } from "@/components/marketing/hero";
@@ -221,19 +222,19 @@ export default async function HomePage({
       )}
 
       {recent.length === 0 && (
-        <div className="mt-16 flex flex-col items-center gap-2 text-center">
-          <p className="text-4xl">📚</p>
-          <p className="font-semibold">Nothing here yet</p>
-          <p className="text-subtle text-sm">
-            Be the first —{" "}
-            <Link
-              href="/sell"
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              list a book
-            </Link>
-          </p>
-        </div>
+        <EmptyState
+          icon={BookOpen}
+          title="Nothing here yet"
+          description="Be the first to pass a book on — it takes under a minute to list."
+          className="mt-16"
+        >
+          <Link
+            href="/sell"
+            className="bg-primary text-primary-foreground hover:bg-primary-active inline-flex min-h-10 items-center rounded-full px-4 text-sm font-medium transition"
+          >
+            List a book
+          </Link>
+        </EmptyState>
       )}
 
       <ShopByClass />

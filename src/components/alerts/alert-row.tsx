@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BellOff } from "lucide-react";
+import { Bell, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { deactivateAlertAction } from "@/app/(main)/buy-actions";
@@ -19,8 +19,11 @@ export function AlertRow({
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   return (
-    <div className="flex items-center justify-between gap-2 rounded-2xl bg-card p-3">
-      <p className="min-w-0 flex-1 truncate text-sm">🔔 {label}</p>
+    <div className="border-hairline bg-card flex items-center justify-between gap-2 rounded-2xl border p-3">
+      <p className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+        <Bell className="text-primary size-4 shrink-0" strokeWidth={1.75} />
+        <span className="truncate">{label}</span>
+      </p>
       <Button
         variant="outline"
         size="icon-sm"

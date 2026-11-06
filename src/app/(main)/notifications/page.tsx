@@ -3,11 +3,18 @@
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Bell } from "lucide-react";
+import { Bell, CheckCircle2, MessageCircle, Sparkle } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentUser } from "@/services/users";
 import { markAllRead, myNotifications } from "@/services/notifications";
 
 export const dynamic = "force-dynamic";
+
+const TYPE_ICON = {
+  alert_match: Sparkle,
+  chat_message: MessageCircle,
+  confirm_handover: CheckCircle2,
+} as const;
 
 export default async function NotificationsPage() {
   const current = await getCurrentUser();
@@ -21,34 +28,67 @@ export default async function NotificationsPage() {
   return (
     <div className="mx-auto mt-4 w-full max-w-md md:mt-8 md:max-w-lg">
       <h1 className="text-display">Notifications</h1>
+      {items.length > 0 && (
+        <p className="text-subtle mt-1 text-sm">
+          {unreadIds.size > 0
+            ? `${unreadIds.size} new — now marked as read.`
+            : "You’re all caught up."}
+        </p>
+      )}
 
       {items.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center gap-3 text-center">
-          <Bell className="text-subtle size-8" />
-          <p className="font-semibold">Nothing yet</p>
-          <p className="text-subtle max-w-xs text-sm">
-            Alerts about books you&apos;re watching for and chat updates will
-            appear here.
-          </p>
-        </div>
+        <EmptyState
+          icon={Bell}
+          title="Nothing yet"
+          description="Alerts about books you're watching for and chat updates will appear here."
+          className="mt-16"
+        >
+          <Link
+            href="/search"
+            className="bg-primary text-primary-foreground hover:bg-primary-active inline-flex min-h-10 items-center rounded-full px-4 text-sm font-medium transition"
+          >
+            Search books
+          </Link>
+        </EmptyState>
       ) : (
-        <ul className="mt-4 flex flex-col gap-1">
+        <ul className="mt-4 flex flex-col gap-1.5">
           {items.map((n) => {
+            const Icon = TYPE_ICON[n.type] ?? Bell;
+            const unread = unreadIds.has(n.id);
             const inner = (
               <div
-                className={`rounded-2xl p-3.5 transition ${
-                  unreadIds.has(n.id) ? "bg-primary-soft" : "bg-card"
+                className={`flex gap-3 rounded-2xl p-3.5 transition ${
+                  unread ? "bg-primary-soft" : "bg-card"
                 }`}
               >
-                <p className="text-sm">{n.text}</p>
-                <p className="text-subtle mt-0.5 text-xs">
-                  {n.createdAt.toLocaleString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </p>
+                <span
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
+                    unread
+                      ? "bg-card text-primary"
+                      : "bg-surface-soft text-subtle"
+                  }`}
+                >
+                  <Icon className="size-4" strokeWidth={1.75} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm leading-snug">{n.text}</p>
+                  <p className="text-subtle mt-1 flex items-center gap-1.5 text-xs">
+                    <time dateTime={n.createdAt.toISOString()}>
+                      {n.createdAt.toLocaleString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                    {unread && (
+                      <>
+                        <span aria-hidden>·</span>
+                        <span className="text-primary font-medium">New</span>
+                      </>
+                    )}
+                  </p>
+                </div>
               </div>
             );
             const target =

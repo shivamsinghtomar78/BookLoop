@@ -115,51 +115,73 @@ export function PhotoUploader({
     }
   }
 
+  const uploadLabel = uploading
+    ? progress > 0
+      ? `Uploading ${progress}%`
+      : "Uploading…"
+    : "";
+
   return (
     <div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {photos.map((url, i) => (
-          <div
-            key={url}
-            className="bg-surface-soft relative size-20 shrink-0 overflow-hidden rounded-lg"
-          >
-            <Image src={url} alt={`Photo ${i + 1}`} fill sizes="80px" className="object-cover" />
-            {i === 0 && (
-              <span className="bg-primary text-primary-foreground absolute bottom-0 inset-x-0 py-0.5 text-center text-[9px] font-medium">
-                COVER
-              </span>
-            )}
+      {photos.length === 0 ? (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className={cn(
+            "border-hairline bg-card hover:border-primary/35 hover:bg-primary-soft/20 flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-8 text-center transition-colors",
+            uploading && "animate-pulse",
+          )}
+        >
+          <span className="bg-primary-soft text-primary flex size-11 items-center justify-center rounded-full">
+            <Camera className="size-5" strokeWidth={1.75} />
+          </span>
+          <span className="text-ink text-sm font-semibold">
+            {uploading ? uploadLabel : "Add up to 4 photos"}
+          </span>
+          <span className="text-subtle text-xs">
+            Camera or gallery — the first photo is the cover
+          </span>
+        </button>
+      ) : (
+        <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+          {photos.map((url, i) => (
+            <div
+              key={url}
+              className="bg-surface-soft relative size-20 shrink-0 overflow-hidden rounded-lg"
+            >
+              <Image src={url} alt={`Photo ${i + 1}`} fill sizes="80px" className="object-cover" />
+              {i === 0 && (
+                <span className="bg-primary text-primary-foreground absolute bottom-0 inset-x-0 py-0.5 text-center text-[9px] font-medium">
+                  COVER
+                </span>
+              )}
+              <button
+                type="button"
+                aria-label="Remove photo"
+                onClick={() => onChange(photos.filter((p) => p !== url))}
+                className="absolute top-1 right-1 rounded-full bg-black/60 p-0.5 text-white"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          ))}
+          {photos.length < LIMITS.maxPhotosPerListing && (
             <button
               type="button"
-              aria-label="Remove photo"
-              onClick={() => onChange(photos.filter((p) => p !== url))}
-              className="absolute top-1 right-1 rounded-full bg-black/60 p-0.5 text-white"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              className={cn(
+                "border-hairline text-subtle hover:border-primary/35 hover:text-primary flex size-20 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-[11px] transition-colors",
+                uploading && "animate-pulse",
+              )}
             >
-              <X className="size-3.5" />
+              <Camera className="size-5" />
+              {uploading ? uploadLabel : "Add more"}
             </button>
-          </div>
-        ))}
-        {photos.length < LIMITS.maxPhotosPerListing && (
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-            className={cn(
-              "border-hairline text-subtle flex size-20 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-[11px]",
-              uploading && "animate-pulse",
-            )}
-          >
-            <Camera className="size-5" />
-            {uploading
-              ? progress > 0
-                ? `${progress}%`
-                : "Uploading…"
-              : photos.length === 0
-                ? "Add photos"
-                : "Add more"}
-          </button>
-        )}
-      </div>
+          )}
+        </div>
+      )}
       <input
         ref={inputRef}
         type="file"
@@ -172,8 +194,8 @@ export function PhotoUploader({
         }}
       />
       <p className="text-subtle mt-1 text-xs">
-        1–4 photos, 4MB each. Photos are compressed automatically. Tip: place the
-        book on a plain table — the photo is the listing.
+        Up to 4 photos, 4MB each — compressed automatically. A plain background
+        helps buyers.
       </p>
     </div>
   );

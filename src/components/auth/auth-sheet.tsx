@@ -9,12 +9,14 @@ import {
   useCallback,
   useContext,
   useState,
+  type ComponentProps,
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,6 +93,40 @@ function FieldError({ message }: { message?: string }) {
   return (
     <p role="alert" className="text-sm text-destructive">
       {message}
+    </p>
+  );
+}
+
+function PasswordInput(props: ComponentProps<typeof Input>) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="relative">
+      <Input
+        {...props}
+        type={visible ? "text" : "password"}
+        className="pr-11"
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        className="text-subtle hover:text-ink absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg transition-colors"
+      >
+        {visible ? (
+          <EyeOff className="size-4" strokeWidth={1.75} />
+        ) : (
+          <Eye className="size-4" strokeWidth={1.75} />
+        )}
+      </button>
+    </div>
+  );
+}
+
+function TrustLine() {
+  return (
+    <p className="text-subtle flex items-center justify-center gap-1.5 text-xs">
+      <ShieldCheck className="size-3.5" strokeWidth={1.75} />
+      School-only community · no phone numbers needed
     </p>
   );
 }
@@ -175,9 +211,8 @@ function SignupForm({
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="password">Password</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="new-password"
             {...form.register("password")}
           />
@@ -193,6 +228,7 @@ function SignupForm({
         >
           Already have an account? Log in
         </button>
+        <TrustLine />
       </form>
     </>
   );
@@ -242,9 +278,8 @@ function LoginForm({
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="login-password">Password</Label>
-          <Input
+          <PasswordInput
             id="login-password"
-            type="password"
             autoComplete="current-password"
             {...form.register("password")}
           />
@@ -260,6 +295,7 @@ function LoginForm({
         >
           New here? Sign up
         </button>
+        <TrustLine />
       </form>
     </>
   );

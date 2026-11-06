@@ -71,6 +71,6 @@ export function actionLabels(mode: string) {
         : "Reserve for this buyer",
     accept: "Accept reservation",
     handover: exchange ? "I exchanged it" : "I handed it over",
-    confirm: exchange ? "Confirm exchanged ✓" : "Confirm received ✓",
+    confirm: exchange ? "Confirm exchanged" : "Confirm received",
   };
 }

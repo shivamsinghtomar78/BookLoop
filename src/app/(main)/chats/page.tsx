@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { MessageCircle } from "lucide-react";
 import { getCurrentUser } from "@/services/users";
 import { listMyChats } from "@/services/chat";
 import { ChatList } from "@/components/chat/chat-list";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const dynamic = "force-dynamic";
 
@@ -19,17 +21,19 @@ export default async function ChatsPage() {
       <h1 className="text-display">Chats</h1>
 
       {rows.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center gap-3 text-center">
-          <p className="text-4xl">💬</p>
-          <p className="font-semibold">No chats yet</p>
-          <p className="text-subtle max-w-xs text-sm">
-            Find a book and tap <span className="font-medium">Chat with Seller</span> —
-            no phone numbers, everything happens here.
-          </p>
-          <Link href="/search" className="text-primary text-sm underline-offset-4 hover:underline">
+        <EmptyState
+          icon={MessageCircle}
+          title="No chats yet"
+          description="Find a book and tap Chat with Seller — no phone numbers, everything happens here."
+          className="mt-16"
+        >
+          <Link
+            href="/search"
+            className="bg-primary text-primary-foreground hover:bg-primary-active inline-flex min-h-10 items-center rounded-full px-4 text-sm font-medium transition"
+          >
             Browse books
           </Link>
-        </div>
+        </EmptyState>
       ) : (
         <div className="mt-4">
           <ChatList rows={rows} />

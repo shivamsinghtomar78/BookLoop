@@ -154,7 +154,46 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    background: var(--bl-lime);
+    color: var(--bl-forest-deep);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+/* Keyboard-only skip link targets the app content, not the nav. */
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  border-radius: 999px;
+  background: var(--bl-forest);
+  color: #fff;
+  padding: 0.625rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: transform 150ms ease-out;
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--bl-lime);
+  outline-offset: 2px;
 }
 
 /* Fluid type scale (responsive spec): clamp() instead of breakpoint jumps.

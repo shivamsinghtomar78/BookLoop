@@ -12,7 +12,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import QRCode from "qrcode";
 import { toast } from "sonner";
-import { Share2 } from "lucide-react";
+import { CheckCircle2, Share2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +27,6 @@ import {
   CATEGORIES,
   CLASSES,
   CONDITIONS,
-  CONDITION_EMOJI,
   EXAMS,
   MODES,
   PRICE_HINTS,
@@ -252,27 +251,42 @@ export function SellForm({
         <Input id="editionYear" placeholder="e.g. 2025" {...form.register("editionYear")} />
       </div>
 
-      {/* 5. Condition — 4 picture cards */}
+      {/* 5. Condition — 4 wear-level cards */}
       <div className="grid gap-1.5">
         <Label>Condition</Label>
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-          {CONDITIONS.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              onClick={() => form.setValue("condition", c.value, { shouldValidate: true })}
-              className={cn(
-                "flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition",
-                values.condition === c.value
-                  ? "border-primary bg-primary-soft"
-                  : "border-hairline bg-card",
-              )}
-            >
-              <span className="text-lg">{CONDITION_EMOJI[c.value]}</span>
-              <span className="text-sm font-semibold">{c.label}</span>
-              <span className="text-subtle text-xs">{c.hint}</span>
-            </button>
-          ))}
+          {CONDITIONS.map((c, index) => {
+            const selected = values.condition === c.value;
+            return (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => form.setValue("condition", c.value, { shouldValidate: true })}
+                aria-pressed={selected}
+                className={cn(
+                  "flex flex-col items-start gap-1.5 rounded-xl border p-3 text-left transition",
+                  selected
+                    ? "border-primary bg-primary-soft"
+                    : "border-hairline bg-card hover:border-primary/25",
+                )}
+              >
+                <span aria-hidden className="flex items-end gap-0.5">
+                  {[0, 1, 2, 3].map((i) => (
+                    <span
+                      key={i}
+                      className={cn(
+                        "w-1 rounded-full",
+                        i <= index ? "bg-primary" : "bg-hairline",
+                      )}
+                      style={{ height: 4 + i * 3 }}
+                    />
+                  ))}
+                </span>
+                <span className="text-sm font-semibold">{c.label}</span>
+                <span className="text-subtle text-xs">{c.hint}</span>
+              </button>
+            );
+          })}
         </div>
         <FieldError message={errors.condition?.message} />
       </div>
@@ -329,7 +343,7 @@ export function SellForm({
 
       {mode === "donate" && (
         <p className="bg-primary-soft text-primary-active rounded-lg px-3 py-2 text-sm">
-          This book will be listed FREE. Thank you! 🌱
+          This book will be listed free for a student who needs it.
         </p>
       )}
 
@@ -454,7 +468,7 @@ function SuccessView({
   }, [url]);
 
   async function share() {
-    const text = `📚 My book is on BookLoop — ${url}`;
+    const text = `My book is on BookLoop — ${url}`;
     try {
       if (navigator.share) await navigator.share({ title: "BookLoop", text, url });
       else {
@@ -468,8 +482,10 @@ function SuccessView({
 
   return (
     <div className="mx-auto mt-10 flex w-full max-w-md flex-col items-center gap-4 pb-8 text-center md:mt-16">
-      <p className="text-4xl">🎉</p>
-      <h1 className="text-display">{edited ? "Changes saved!" : "Your book is live!"}</h1>
+      <span className="bg-primary-soft text-primary ring-primary/10 flex size-16 items-center justify-center rounded-2xl ring-1">
+        <CheckCircle2 className="size-7" strokeWidth={1.75} />
+      </span>
+      <h1 className="text-display">{edited ? "Changes saved" : "Your book is live"}</h1>
       <p className="text-subtle text-sm">
         BookLoop ID: <span className="text-foreground font-semibold">{bookloopId}</span>
       </p>

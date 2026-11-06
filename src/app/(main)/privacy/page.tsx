@@ -15,10 +15,13 @@ const UPDATED = "30 October 2026";
 export default function PrivacyPage() {
   return (
     <article className="mx-auto mt-4 w-full max-w-2xl md:mt-8">
-      <h1 className="text-display">Privacy</h1>
+      <p className="text-primary text-[10px] font-semibold tracking-[0.2em] uppercase">
+        Trust &amp; safety
+      </p>
+      <h1 className="text-display mt-1">Privacy</h1>
       <p className="text-subtle mt-1 text-sm">Last updated {UPDATED}</p>
 
-      <div className="text-body mt-6 space-y-6 text-sm leading-relaxed [&_h2]:text-ink [&_h2]:text-base [&_h2]:font-semibold [&_li]:mt-1 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5">
+      <div className="text-body mt-8 space-y-6 text-sm leading-relaxed [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_h2]:text-ink [&_h2]:text-base [&_h2]:font-semibold [&_li]:mt-1 [&_section]:border-hairline [&_section]:border-t [&_section]:pt-6 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5">
         <p>
           BookLoop is a school book exchange. We keep the data small on purpose:
           enough to list books, chat about them, and keep the network limited to

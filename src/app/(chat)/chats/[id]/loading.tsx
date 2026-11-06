@@ -10,8 +10,30 @@ export default function ChatLoading() {
           <div className="bg-surface-soft h-2.5 w-24 rounded" />
         </div>
       </div>
-      <div className="bg-surface-soft/40 flex-1" />
-      <div className="border-hairline bg-card h-16 border-t" />
+
+      <div className="border-hairline bg-card flex h-12 items-center gap-2 border-b px-4">
+        <div className="bg-surface-soft h-2.5 w-full max-w-sm rounded" />
+      </div>
+
+      <div className="bg-surface-soft/40 flex flex-1 flex-col gap-3 overflow-hidden px-3 py-4 sm:px-4">
+        {[
+          { w: "w-40", self: "self-start" },
+          { w: "w-56", self: "self-end" },
+          { w: "w-32", self: "self-start" },
+          { w: "w-48", self: "self-end" },
+          { w: "w-44", self: "self-start" },
+        ].map((b, i) => (
+          <div
+            key={i}
+            className={`bg-card border-hairline h-9 rounded-2xl border ${b.w} ${b.self}`}
+          />
+        ))}
+      </div>
+
+      <div className="border-hairline bg-card flex items-center gap-2 border-t px-3 py-2.5">
+        <div className="bg-surface-soft h-11 flex-1 rounded-2xl" />
+        <div className="bg-surface-soft size-11 shrink-0 rounded-full" />
+      </div>
     </div>
   );
 }

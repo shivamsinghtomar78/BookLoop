@@ -237,19 +237,19 @@ export async function confirmReceived(chatId: number, buyerId: number) {
     {
       userId: tx.sellerId,
       type: "confirm_handover" as const,
-      text: `"${ctx.listing.title}" is done — leave a quick 👍`,
+      text: `"${ctx.listing.title}" is done — leave a quick rating`,
       listingId: ctx.listing.id,
     },
     {
       userId: tx.buyerId,
       type: "confirm_handover" as const,
-      text: `"${ctx.listing.title}" is done — leave a quick 👍`,
+      text: `"${ctx.listing.title}" is done — leave a quick rating`,
       listingId: ctx.listing.id,
     },
   ]);
   void sendEmail(
     ctx.seller.email,
-    "Your BookLoop book found its new home 🎉",
+    "Your BookLoop book found its new home",
     `Hi ${ctx.seller.fullName},\n\n"${ctx.listing.title}" was confirmed received. Open the chat to leave a quick rating.\n\n— BookLoop`,
   );
 }

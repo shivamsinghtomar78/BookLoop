@@ -3,7 +3,9 @@
 
 import Link from "next/link";
 import { Suspense } from "react";
+import { SearchX } from "lucide-react";
 import { BookCard } from "@/components/book-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SearchBar } from "@/components/search/search-bar";
 import { FilterChips } from "@/components/search/filter-chips";
 import { CreateAlertButton } from "@/components/search/create-alert-button";
@@ -78,7 +80,7 @@ export default async function SearchPage({
   return (
     <div className="mt-4 flex flex-col gap-4 md:mt-6">
       <h1 className="sr-only">Search books</h1>
-      <div className="mx-auto w-full max-w-xl">
+      <div className="w-full max-w-xl md:max-w-2xl">
         <Suspense>
           <SearchBar />
         </Suspense>
@@ -97,7 +99,7 @@ export default async function SearchPage({
             {hasFilters(filters) && (
               <Link
                 href="/search"
-                className="text-primary shrink-0 text-sm underline-offset-4 hover:underline"
+                className="text-primary shrink-0 text-sm font-medium underline-offset-4 hover:underline"
               >
                 Clear all
               </Link>
@@ -115,25 +117,31 @@ export default async function SearchPage({
           </div>
         </>
       ) : (
-        <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <p className="text-4xl">🔍</p>
-          <p className="font-semibold">No match yet</p>
-          <p className="text-subtle max-w-xs text-sm">
-            Set an alert and we&apos;ll tell you the moment someone lists it.
-          </p>
+        <EmptyState
+          icon={SearchX}
+          title="No match yet"
+          description="Set an alert and we’ll tell you the moment someone at your school lists it."
+          className="mt-8"
+        >
           <Suspense>
             <CreateAlertButton />
           </Suspense>
+          <Link
+            href="/search"
+            className="text-body hover:text-ink inline-flex h-10 items-center rounded-full px-4 text-sm font-medium transition hover:bg-surface-soft"
+          >
+            Browse all books
+          </Link>
           {relaxed && (
             <Link
               href={`/search?class=${relaxed.cls}`}
-              className="text-primary text-sm underline-offset-4 hover:underline"
+              className="text-primary inline-flex h-10 items-center text-sm font-medium underline-offset-4 hover:underline"
             >
               {relaxed.count} book{relaxed.count === 1 ? "" : "s"} in Class{" "}
               {relaxed.cls} — see all
             </Link>
           )}
-        </div>
+        </EmptyState>
       )}
     </div>
   );

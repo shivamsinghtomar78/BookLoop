@@ -4,7 +4,7 @@
 // fires beforeinstallprompt (Chromium); dismissible, remembered per device.
 
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { Smartphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type BeforeInstallPromptEvent = Event & {
@@ -43,7 +43,9 @@ export function InstallPrompt() {
 
   return (
     <div className="border-hairline bg-card mt-4 flex items-center gap-3 rounded-2xl border p-3">
-      <span className="text-2xl">📲</span>
+      <span className="bg-primary-soft text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+        <Smartphone className="size-5" strokeWidth={1.75} />
+      </span>
       <p className="min-w-0 flex-1 text-sm">
         Add <span className="font-semibold">BookLoop</span> to your home screen
         — it works like an app.
@@ -57,7 +59,12 @@ export function InstallPrompt() {
       >
         Add
       </Button>
-      <button type="button" aria-label="Dismiss" onClick={dismiss} className="text-subtle p-1">
+      <button
+        type="button"
+        aria-label="Dismiss"
+        onClick={dismiss}
+        className="text-subtle hover:bg-surface-soft flex size-8 shrink-0 items-center justify-center rounded-full"
+      >
         <X className="size-4" />
       </button>
     </div>

@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { openChatAction } from "@/app/(main)/chats/chat-actions";
 import { useGatedNav } from "@/components/shell/use-gated-nav";
@@ -33,8 +34,9 @@ export function OpenChatButton({ listingId }: { listingId: number }) {
   }
 
   return (
-    <Button size="lg" className="w-full" disabled={busy} onClick={go}>
-      💬 {busy ? "Opening chat…" : "Chat with Seller"}
+    <Button size="lg" className="w-full gap-2" disabled={busy} onClick={go}>
+      <MessageCircle className="size-4" />
+      {busy ? "Opening chat…" : "Chat with Seller"}
     </Button>
   );
 }

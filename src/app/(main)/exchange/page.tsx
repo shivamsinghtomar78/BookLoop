@@ -4,8 +4,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { inArray } from "drizzle-orm";
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, ArrowRight, ChevronRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getDb } from "@/db/client";
 import { listingPhotos, listings } from "@/db/schema";
 import { getCurrentUser } from "@/services/users";
@@ -17,6 +18,12 @@ import {
 export const dynamic = "force-dynamic";
 
 type Offer = typeof listings.$inferSelect;
+
+const STEPS = [
+  "Offer a book you're done with.",
+  "We show it to students who have the one you want.",
+  "Chat, agree, and meet at school.",
+];
 
 async function covers(rows: Offer[]) {
   if (rows.length === 0) return new Map<number, string>();
@@ -39,7 +46,7 @@ function OfferRow({ offer, photo }: { offer: Offer; photo: string | null }) {
   return (
     <Link
       href={`/listings/${offer.id}`}
-      className="flex items-center gap-3 rounded-2xl bg-card p-3"
+      className="group border-hairline bg-card hover:border-primary/25 flex items-center gap-3 rounded-2xl border p-3 transition-colors"
     >
       <span className="bg-surface-soft relative size-12 shrink-0 overflow-hidden rounded-lg">
         {photo && (
@@ -57,6 +64,7 @@ function OfferRow({ offer, photo }: { offer: Offer; photo: string | null }) {
           <span className="truncate">{offer.wantsBook}</span>
         </span>
       </span>
+      <ChevronRight className="text-hairline group-hover:text-primary size-4 shrink-0 transition-colors" />
     </Link>
   );
 }
@@ -73,7 +81,7 @@ export default async function ExchangePage() {
   const coverMap = await covers([...forYou, ...rest]);
 
   return (
-    <div className="mx-auto mt-4 w-full max-w-md md:mt-8 md:max-w-2xl">
+    <div className="mx-auto mt-4 w-full max-w-md md:mt-8 md:max-w-3xl lg:max-w-5xl">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-display">Exchange</h1>
         <Link href="/sell?mode=exchange" className={buttonVariants({ size: "default" })}>
@@ -84,41 +92,89 @@ export default async function ExchangePage() {
         Swap a book you&apos;re done with for one you need.
       </p>
 
-      {forYou.length > 0 && (
-        <section className="mt-6">
-          <h2 className="text-title-lg">✨ For you</h2>
-          <p className="text-subtle mt-0.5 text-xs">
-            These students want books you have listed.
-          </p>
-          <div className="mt-2 flex flex-col gap-2">
-            {forYou.map((o) => (
-              <OfferRow key={o.id} offer={o} photo={coverMap.get(o.id) ?? null} />
-            ))}
-          </div>
-        </section>
-      )}
+      <div className="mt-6 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_17rem]">
+        <div>
+          {forYou.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2">
+                <h2 className="text-title-lg">For you</h2>
+                <span className="bg-primary-soft text-primary-active rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+                  Matched
+                </span>
+              </div>
+              <p className="text-subtle mt-0.5 text-xs">
+                These students want books you have listed.
+              </p>
+              <div className="mt-2 flex flex-col gap-2">
+                {forYou.map((o) => (
+                  <OfferRow key={o.id} offer={o} photo={coverMap.get(o.id) ?? null} />
+                ))}
+              </div>
+            </section>
+          )}
 
-      <section className="mt-6">
-        <h2 className="text-title-lg">All offers</h2>
-        {rest.length === 0 && forYou.length === 0 ? (
-          <div className="mt-10 flex flex-col items-center gap-3 text-center">
-            <p className="text-4xl">🔄</p>
-            <p className="font-semibold">No exchange offers yet</p>
-            <p className="text-subtle max-w-xs text-sm">
-              Have a book you&apos;re done with? Offer it for the one you need next.
-            </p>
-            <Link href="/sell?mode=exchange" className={buttonVariants({ size: "lg" })}>
-              Post the first offer
+          <section className={forYou.length > 0 ? "mt-8" : undefined}>
+            <h2 className="text-title-lg">All offers</h2>
+            {rest.length === 0 && forYou.length === 0 ? (
+              <EmptyState
+                icon={ArrowLeftRight}
+                title="No exchange offers yet"
+                description="Have a book you're done with? Offer it for the one you need next."
+                className="mt-8"
+              >
+                <Link href="/sell?mode=exchange" className={buttonVariants({ size: "lg" })}>
+                  Post the first offer
+                </Link>
+              </EmptyState>
+            ) : (
+              <div className="mt-2 flex flex-col gap-2">
+                {rest.map((o) => (
+                  <OfferRow key={o.id} offer={o} photo={coverMap.get(o.id) ?? null} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {(rest.length > 0 || forYou.length > 0) && (
+            <Link
+              href="/search"
+              className="group bg-surface-soft/60 ring-hairline hover:ring-primary/25 mt-5 flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ring-1 transition"
+            >
+              <span className="text-sm">
+                <span className="text-ink font-medium">Looking for a specific title?</span>{" "}
+                <span className="text-subtle">Browse every book in your school.</span>
+              </span>
+              <ArrowRight className="text-subtle group-hover:text-primary size-4 shrink-0 transition-colors" />
+            </Link>
+          )}
+        </div>
+
+        <aside className="hidden lg:block">
+          <div className="bg-surface-soft/60 ring-hairline sticky top-24 rounded-2xl p-5 ring-1">
+            <p className="text-ink text-sm font-semibold">How a swap works</p>
+            <ol className="mt-4 flex flex-col gap-3.5">
+              {STEPS.map((step, i) => (
+                <li key={step} className="flex items-start gap-2.5">
+                  <span className="text-primary ring-hairline bg-card mt-px flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ring-1">
+                    {i + 1}
+                  </span>
+                  <span className="text-body text-xs leading-relaxed">{step}</span>
+                </li>
+              ))}
+            </ol>
+            <Link
+              href="/sell?mode=exchange"
+              className={buttonVariants({
+                variant: "outline",
+                size: "sm",
+                className: "mt-5 w-full",
+              })}
+            >
+              Post an offer
             </Link>
           </div>
-        ) : (
-          <div className="mt-2 flex flex-col gap-2 xl:grid xl:grid-cols-2">
-            {rest.map((o) => (
-              <OfferRow key={o.id} offer={o} photo={coverMap.get(o.id) ?? null} />
-            ))}
-          </div>
-        )}
-      </section>
+        </aside>
+      </div>
     </div>
   );
 }

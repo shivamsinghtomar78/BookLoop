@@ -19,29 +19,42 @@ export function TopNav({ dark = false }: { dark?: boolean }) {
       "rounded-full px-3.5 py-2 text-sm font-medium transition",
       dark
         ? active
-          ? "text-lime-soft"
+          ? "bg-white/8 text-lime-soft"
           : "text-white/60 hover:bg-white/5 hover:text-white"
         : active
-          ? "text-primary"
+          ? "bg-primary-soft text-primary-active"
           : "text-muted-foreground hover:bg-surface-soft hover:text-ink",
     );
 
   return (
     <nav className="hidden items-center gap-0.5 md:flex" aria-label="Main">
-      <Link href="/" className={linkCls(pathname === "/")}>
+      <Link
+        href="/"
+        aria-current={pathname === "/" ? "page" : undefined}
+        className={linkCls(pathname === "/")}
+      >
         Home
       </Link>
-      <Link href="/search" className={linkCls(pathname === "/search")}>
+      <Link
+        href="/search"
+        aria-current={pathname === "/search" ? "page" : undefined}
+        className={linkCls(pathname === "/search")}
+      >
         Search
       </Link>
       <button
         type="button"
         onClick={() => gatedGo("/chats")}
+        aria-current={pathname.startsWith("/chats") ? "page" : undefined}
         className={linkCls(pathname.startsWith("/chats"))}
       >
         Chats
       </button>
-      <Link href="/profile" className={linkCls(pathname === "/profile")}>
+      <Link
+        href="/profile"
+        aria-current={pathname === "/profile" ? "page" : undefined}
+        className={linkCls(pathname === "/profile")}
+      >
         Profile
       </Link>
       {session && (

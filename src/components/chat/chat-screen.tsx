@@ -5,13 +5,21 @@
 // pickup note, role/state-aware transaction actions, one-tap ratings.
 // Full-bleed on phones, two-pane beside the list on desktop.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { io, type Socket } from "socket.io-client";
 import { toast } from "sonner";
-import { ArrowLeft, Send, ThumbsDown, ThumbsUp } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  MapPin,
+  MessageCircle,
+  Send,
+  ThumbsDown,
+  ThumbsUp,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TxTracker } from "@/components/chat/tx-tracker";
 import { actionLabels, statusLine } from "@/components/chat/tx-status";
@@ -30,11 +38,27 @@ import { cn } from "@/lib/utils";
 
 type Msg = { id: number; senderId: number; body: string; at: string };
 
-const QUICK_ASKS = [
-  "Is this available?",
-  "Can we meet tomorrow?",
-  "Will you take ₹__?",
-];
+const TZ = "Asia/Kolkata";
+
+function dayKey(iso: string) {
+  return new Date(iso).toLocaleDateString("en-CA", { timeZone: TZ });
+}
+
+function dayLabel(iso: string, now: number) {
+  const key = dayKey(iso);
+  if (now > 0) {
+    const today = new Date(now);
+    if (key === today.toLocaleDateString("en-CA", { timeZone: TZ })) return "Today";
+    const yesterday = new Date(now - 86_400_000);
+    if (key === yesterday.toLocaleDateString("en-CA", { timeZone: TZ }))
+      return "Yesterday";
+  }
+  return new Date(iso).toLocaleDateString("en-IN", {
+    timeZone: TZ,
+    day: "numeric",
+    month: "short",
+  });
+}
 
 const POLL_VISIBLE_MS = 4_000;
 const POLL_IDLE_MS = 15_000;
@@ -70,6 +94,7 @@ export function ChatScreen(props: {
   const seenIds = useRef(new Set(props.initialMessages.map((m) => m.id)));
   const lastActivityRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const liveRef = useRef(false);
   const announcedRef = useRef<string | null>(null);
@@ -209,6 +234,14 @@ export function ChatScreen(props: {
     if (el) el.scrollTop = el.scrollHeight;
   }, [msgs.length, props.chatId]);
 
+  // Grow the composer with the draft, up to six lines.
+  useEffect(() => {
+    const el = composerRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+  }, [draft]);
+
   // Announce gate changes to screen readers (skip the initial render).
   const statusText = statusLine(state, props.role, props.otherName);
   useEffect(() => {
@@ -251,6 +284,13 @@ export function ChatScreen(props: {
     props.role === "buyer" && !msgs.some((m) => m.senderId === props.meId);
   const closedOrDeleted =
     state.listingStatus === "closed" || state.listingStatus === "deleted";
+  const quickAsks = [
+    "Is this available?",
+    "Can we meet tomorrow?",
+    props.listing.priceInr != null
+      ? `Will you take ₹${Math.max(1, Math.round(props.listing.priceInr * 0.85))}?`
+      : "Would you take an offer?",
+  ];
 
   return (
     <div
@@ -290,12 +330,22 @@ export function ChatScreen(props: {
             <span className="block truncate text-sm font-semibold">
               {props.listing.title}
             </span>
-            <span className="text-subtle block truncate text-xs">
-              with {props.otherName}
-              {props.listing.mode === "sell" &&
-                props.listing.priceInr != null &&
-                ` · ₹${props.listing.priceInr}`}
-              {live && " · ⚡ live"}
+            <span className="text-subtle flex items-center gap-1.5 text-xs">
+              <span className="truncate">
+                with {props.otherName}
+                {props.listing.mode === "sell" &&
+                  props.listing.priceInr != null &&
+                  ` · ₹${props.listing.priceInr}`}
+              </span>
+              {live && (
+                <span className="text-primary inline-flex shrink-0 items-center gap-1 font-medium">
+                  <span className="relative flex size-1.5">
+                    <span className="bg-primary absolute inline-flex size-full animate-ping rounded-full opacity-60" />
+                    <span className="bg-primary relative inline-flex size-1.5 rounded-full" />
+                  </span>
+                  Live
+                </span>
+              )}
             </span>
           </span>
         </Link>
@@ -307,8 +357,9 @@ export function ChatScreen(props: {
       {/* Transcript */}
       <div
         ref={scrollRef}
-        className="bg-surface-soft/40 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4"
+        className="bg-surface-soft/40 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 py-3 sm:px-4"
       >
+        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
         {/* Silent-seller nudge (WORKFLOW.md §9): my last message unanswered 48h+ */}
         {(() => {
           const last = msgs.at(-1);
@@ -334,7 +385,10 @@ export function ChatScreen(props: {
 
         {/* Pinned pickup note (D-005) — scrolls with the conversation */}
         <div className="bg-primary-soft text-primary-active mb-3 flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs">
-          <span>🏫 Meet at the school library/office to hand over books</span>
+          <span className="flex min-w-0 items-center gap-1.5">
+            <MapPin className="size-3.5 shrink-0" strokeWidth={2} />
+            <span className="truncate">Meet at the school library</span>
+          </span>
           <button
             type="button"
             className="shrink-0 font-semibold underline-offset-2 hover:underline"
@@ -345,9 +399,19 @@ export function ChatScreen(props: {
         </div>
 
         {msgs.length === 0 && (
-          <p className="text-subtle py-8 text-center text-sm">
-            Say hi — no phone numbers needed, everything happens here.
-          </p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+            <span className="bg-card ring-hairline text-primary flex size-12 items-center justify-center rounded-2xl ring-1">
+              <MessageCircle className="size-5" strokeWidth={1.75} />
+            </span>
+            <div className="flex flex-col gap-1">
+              <p className="text-ink text-sm font-semibold">
+                Say hi to {props.otherName}
+              </p>
+              <p className="text-subtle mx-auto max-w-[16rem] text-xs leading-relaxed">
+                No phone numbers needed — arrange the pickup right here.
+              </p>
+            </div>
+          </div>
         )}
         <div
           role="log"
@@ -356,48 +420,62 @@ export function ChatScreen(props: {
           aria-label="Messages"
           className="flex flex-col gap-1.5"
         >
-          {msgs.map((m) => {
+          {msgs.map((m, i) => {
             const mine = m.senderId === props.meId;
+            const prev = msgs[i - 1];
+            const newDay = !prev || dayKey(prev.at) !== dayKey(m.at);
+            const time = new Date(m.at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: TZ,
+            });
             return (
-              <div
-                key={m.id}
-                className={cn(
-                  "max-w-[80%] rounded-2xl px-3 py-1.5 text-sm break-words",
-                  mine
-                    ? "bg-primary text-primary-foreground self-end rounded-br-md"
-                    : "bg-card border-hairline self-start rounded-bl-md border",
+              <Fragment key={m.id}>
+                {newDay && (
+                  <div className="my-2 flex items-center justify-center">
+                    <span className="bg-card border-hairline text-subtle rounded-full border px-2.5 py-0.5 text-[10px] font-medium tracking-wide uppercase">
+                      {dayLabel(m.at, now)}
+                    </span>
+                  </div>
                 )}
-              >
-                <p className="whitespace-pre-wrap">{m.body}</p>
-                <time
-                  dateTime={m.at}
-                  suppressHydrationWarning
+                <div
                   className={cn(
-                    "mt-0.5 block text-[10px] leading-none",
-                    mine ? "text-primary-foreground/70 text-right" : "text-subtle",
+                    "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm break-words shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
+                    mine
+                      ? "bg-primary text-primary-foreground self-end rounded-br-md"
+                      : "bg-card border-hairline self-start rounded-bl-md border",
                   )}
                 >
-                  {new Date(m.at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </time>
-              </div>
+                  <p className="whitespace-pre-wrap">{m.body}</p>
+                  <time
+                    dateTime={m.at}
+                    suppressHydrationWarning
+                    className={cn(
+                      "mt-0.5 block text-[10px] leading-none",
+                      mine ? "text-primary-foreground/70 text-right" : "text-subtle",
+                    )}
+                  >
+                    {time}
+                  </time>
+                </div>
+              </Fragment>
             );
           })}
+        </div>
         </div>
       </div>
 
       {/* Composer + deal actions, pinned above the keyboard */}
-      <footer className="border-hairline bg-card flex shrink-0 flex-col gap-2 border-t px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:pb-3">
+      <footer className="border-hairline bg-card flex shrink-0 flex-col border-t px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:pb-3">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
         {showQuickAsks && !closedOrDeleted && (
           <div className="no-scrollbar flex gap-2 overflow-x-auto pb-0.5">
-            {QUICK_ASKS.map((q) => (
+            {quickAsks.map((q) => (
               <button
                 key={q}
                 type="button"
                 onClick={() => send(q)}
-                className="border-hairline bg-card min-h-10 shrink-0 rounded-full border px-3.5 text-sm"
+                className="border-hairline bg-card hover:border-primary/30 hover:bg-primary-soft/40 min-h-10 shrink-0 rounded-full border px-3.5 text-sm transition-colors"
               >
                 {q}
               </button>
@@ -427,6 +505,7 @@ export function ChatScreen(props: {
             }}
           >
             <textarea
+              ref={composerRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
@@ -452,6 +531,7 @@ export function ChatScreen(props: {
             </Button>
           </form>
         )}
+        </div>
       </footer>
     </div>
   );
@@ -485,9 +565,12 @@ function TxActions({
   // Rate prompt after close (skippable — it just stays available)
   if (state.confirmed && state.myRating === null) {
     return (
-      <div className="bg-background flex items-center justify-between gap-2 rounded-2xl p-2.5">
-        <p className="text-sm font-medium">How did it go?</p>
-        <div className="flex gap-2">
+      <div className="bg-background ring-hairline flex items-center justify-between gap-2 rounded-2xl p-2.5 ring-1">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">How did it go?</p>
+          <p className="text-subtle text-xs">A quick rating helps the next student.</p>
+        </div>
+        <div className="flex shrink-0 gap-2">
           <Button
             variant="outline"
             size="icon"
@@ -512,9 +595,10 @@ function TxActions({
   }
   if (state.confirmed) {
     return (
-      <p className="text-subtle text-center text-xs">
-        Done ✓ — thanks for keeping the loop going 🌱
-      </p>
+      <div className="bg-primary-soft text-primary-active flex items-center justify-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-medium">
+        <CheckCircle2 className="size-4 shrink-0" strokeWidth={2} />
+        Done — thanks for keeping the loop going.
+      </div>
     );
   }
   if (state.listingStatus === "deleted") return null;

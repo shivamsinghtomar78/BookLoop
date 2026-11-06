@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { BellPlus } from "lucide-react";
+import { BellPlus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createAlertAction } from "@/app/(main)/buy-actions";
 import { useGatedNav } from "@/components/shell/use-gated-nav";
@@ -46,8 +46,8 @@ export function CreateAlertButton() {
 
   return (
     <Button size="lg" onClick={create} disabled={done}>
-      <BellPlus className="size-4" />
-      {done ? "Alert set ✓" : "Notify me when it's listed"}
+      {done ? <Check className="size-4" /> : <BellPlus className="size-4" />}
+      {done ? "Alert set" : "Notify me when it's listed"}
     </Button>
   );
 }

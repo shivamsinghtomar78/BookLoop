@@ -201,7 +201,7 @@ function Chat({ s, phone }: { s: S; phone?: boolean }) {
             </Bubble>
           )}
           {s.system >= 2 && <Stamp className="bl-enter">Handed over at the school library</Stamp>}
-          {s.step >= 5 && <Stamp className="bl-enter">You rated Aarav 👍</Stamp>}
+          {s.step >= 5 && <Stamp className="bl-enter">You rated Aarav</Stamp>}
         </Thread>
       </div>
 
@@ -242,7 +242,7 @@ function Chat({ s, phone }: { s: S; phone?: boolean }) {
                   <p className="bl-helper">Confirm you received the book from Aarav.</p>
                   <div className="bl-btns">
                     <button type="button" className="bl-btn bl-btn--primary" data-target="confirm" data-cursor="pointer">
-                      Confirm received ✓
+                      Confirm received
                     </button>
                     <button type="button" className="bl-btn bl-btn--ghost">
                       Report issue

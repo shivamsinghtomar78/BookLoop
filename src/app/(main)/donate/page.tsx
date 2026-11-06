@@ -3,8 +3,10 @@
 // automatically via the active-status filter.
 
 import Link from "next/link";
+import { Gift } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { BookCard } from "@/components/book-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { activeListingsByMode } from "@/db/repos/listings";
 import { getCurrentUser } from "@/services/users";
 import { wishlistedIds } from "@/services/wishlist";
@@ -31,20 +33,20 @@ export default async function DonatePage() {
       </div>
       <p className="text-subtle mt-1 text-sm">
         Donated by students, free for whoever needs them. Chat to claim — first
-        come, first served. 🌱
+        come, first served.
       </p>
 
       {donations.length === 0 ? (
-        <div className="mt-12 flex flex-col items-center gap-3 text-center">
-          <p className="text-4xl">🎁</p>
-          <p className="font-semibold">No donations right now</p>
-          <p className="text-subtle max-w-xs text-sm">
-            Give a finished book a second life — it takes two minutes.
-          </p>
+        <EmptyState
+          icon={Gift}
+          title="No donations right now"
+          description="Give a finished book a second life — it takes two minutes."
+          className="mt-12"
+        >
           <Link href="/sell?mode=donate" className={buttonVariants({ size: "lg" })}>
             Donate the first book
           </Link>
-        </div>
+        </EmptyState>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
           {donations.map((b) => (

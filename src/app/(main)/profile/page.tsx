@@ -4,7 +4,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { and, eq, inArray } from "drizzle-orm";
-import { BadgeCheck, ThumbsUp } from "lucide-react";
+import {
+  BadgeCheck,
+  BookOpen,
+  MessageCircle,
+  ShieldCheck,
+  Sprout,
+  ThumbsUp,
+  UserRound,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   GuestProfileButtons,
@@ -27,18 +35,63 @@ import { CATEGORIES } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
+const GUEST_POINTS = [
+  {
+    icon: BookOpen,
+    title: "List in under two minutes",
+    body: "Snap a photo, set a price — or mark it free for a junior.",
+  },
+  {
+    icon: MessageCircle,
+    title: "Chat without phone numbers",
+    body: "Arrange the handover right here. Nothing personal is shared.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Only your school",
+    body: "Every listing comes from a student on your own campus.",
+  },
+] as const;
+
 export default async function ProfilePage() {
   const current = await getCurrentUser();
 
   if (!current) {
     return (
-      <div className="mt-16 flex flex-col items-center gap-4 text-center">
-        <p className="text-4xl">👋</p>
-        <h1 className="text-xl font-bold">Your BookLoop profile</h1>
-        <p className="text-subtle max-w-xs text-sm">
-          Sign up to list books, chat with sellers and build your 👍 reputation.
-        </p>
-        <GuestProfileButtons />
+      <div className="mx-auto mt-12 flex w-full max-w-md flex-col items-center gap-5 text-center md:mt-16 lg:mt-14 lg:max-w-4xl lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:text-left">
+        <div className="flex flex-col items-center gap-5 lg:items-start">
+          <span className="bg-primary-soft text-primary ring-primary/10 flex size-16 items-center justify-center rounded-2xl ring-1">
+            <UserRound className="size-7" strokeWidth={1.75} />
+          </span>
+          <div className="flex flex-col gap-1.5">
+            <h1 className="font-display text-ink text-2xl font-semibold tracking-tight">
+              Your BookLoop profile
+            </h1>
+            <p className="text-subtle text-sm leading-relaxed">
+              Sign up to list books, chat with sellers and build your reputation.
+            </p>
+          </div>
+          <div className="w-full lg:max-w-xs">
+            <GuestProfileButtons />
+          </div>
+          <p className="text-subtle text-xs">Free for students · Classes 1–12</p>
+        </div>
+
+        <ul className="border-hairline mt-2 flex w-full flex-col gap-5 border-t pt-6 text-left lg:mt-0 lg:gap-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
+          {GUEST_POINTS.map(({ icon: Icon, title, body }) => (
+            <li key={title} className="flex items-start gap-3">
+              <span className="bg-primary-soft text-primary mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg">
+                <Icon className="size-4" strokeWidth={1.75} />
+              </span>
+              <span>
+                <span className="text-ink block text-sm font-medium">{title}</span>
+                <span className="text-subtle mt-0.5 block text-sm leading-relaxed">
+                  {body}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     );
   }
@@ -77,7 +130,7 @@ export default async function ProfilePage() {
             )}
             {donations > 0 && (
               <Badge className="bg-primary-soft text-primary-active">
-                🌱 Book donor · {donations}
+                <Sprout className="size-3.5" /> Book donor · {donations}
               </Badge>
             )}
           </div>
@@ -127,7 +180,7 @@ async function MyListingsSection({ sellerId }: { sellerId: number }) {
     return (
       <EmptyTab
         title="My Listings"
-        hint="Your finished books are worth money — list one from the ＋ tab."
+        hint="Your finished books are worth money — list one from the Sell tab."
       />
     );
   }
@@ -152,10 +205,18 @@ async function MyListingsSection({ sellerId }: { sellerId: number }) {
 
   return (
     <section>
-      <h2 className="font-semibold">My Listings</h2>
+      <h2 className="font-semibold">
+        My Listings{" "}
+        <span className="text-subtle text-xs font-medium tabular-nums">
+          {rows.length}
+        </span>
+      </h2>
       <div className="mt-2 grid grid-cols-1 gap-2 xl:grid-cols-2">
         {[...active, ...closed].map((r) => (
-          <div key={r.id} className="flex items-center gap-3 rounded-2xl bg-card p-2.5">
+          <div
+            key={r.id}
+            className="bg-card hover:ring-hairline flex items-center gap-3 rounded-2xl p-2.5 ring-1 ring-transparent transition"
+          >
             <Link
               href={`/listings/${r.id}`}
               className="bg-surface-soft relative size-12 shrink-0 overflow-hidden rounded-lg"
@@ -206,7 +267,7 @@ async function WishlistSection({
       <section>
         <h2 className="font-semibold">My Wishlist</h2>
         <p className="text-subtle mt-1 text-sm">
-          Save books with the ♥ — they&apos;ll wait for you here.
+          Tap the heart on any book — they&apos;ll wait for you here.
         </p>
         {trending.length > 0 && (
           <>
@@ -226,13 +287,18 @@ async function WishlistSection({
 
   return (
     <section>
-      <h2 className="font-semibold">My Wishlist</h2>
+      <h2 className="font-semibold">
+        My Wishlist{" "}
+        <span className="text-subtle text-xs font-medium tabular-nums">
+          {items.length}
+        </span>
+      </h2>
       <div className="mt-2 grid grid-cols-1 gap-2 xl:grid-cols-2">
         {items.map((l) => (
           <Link
             key={l.id}
             href={`/listings/${l.id}`}
-            className="flex items-center gap-3 rounded-2xl bg-card p-2.5"
+            className="bg-card hover:ring-hairline flex items-center gap-3 rounded-2xl p-2.5 ring-1 ring-transparent transition"
           >
             <span className="bg-surface-soft relative size-12 shrink-0 overflow-hidden rounded-lg">
               {l.photoUrl && (
@@ -277,7 +343,12 @@ async function AlertsSection({ userId }: { userId: number }) {
 
   return (
     <section>
-      <h2 className="font-semibold">My Alerts</h2>
+      <h2 className="font-semibold">
+        My Alerts{" "}
+        <span className="text-subtle text-xs font-medium tabular-nums">
+          {alerts.length}
+        </span>
+      </h2>
       <p className="text-subtle mt-1 text-sm">
         We notify you when a matching book is listed.
       </p>

@@ -141,7 +141,7 @@ export async function sendMessage(chatId: number, userId: number, body: string) 
     Date.now() - last.createdAt.getTime() <
       LIMITS.minSecondsBetweenMessages * 1000
   ) {
-    throw new DomainError("Slow down a little 🙂");
+    throw new DomainError("You're sending messages too fast — try again in a second.");
   }
 
   const [msg] = await db

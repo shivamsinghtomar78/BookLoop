@@ -22,8 +22,14 @@ export function BottomNav() {
           ? "text-lime-soft"
           : "text-white/55 hover:text-white"
         : active
-          ? "text-primary"
+          ? "text-primary-active"
           : "text-muted-foreground hover:text-foreground",
+    );
+
+  const iconCls = (active: boolean) =>
+    cn(
+      "flex size-8 items-center justify-center rounded-full transition-colors",
+      active && (dark ? "bg-white/10" : "bg-primary-soft"),
     );
 
   return (
@@ -37,12 +43,24 @@ export function BottomNav() {
       aria-label="Main"
     >
       <div className="mx-auto flex max-w-md items-center">
-        <Link href="/" className={itemCls(pathname === "/")}>
-          <Home className="size-5" />
+        <Link
+          href="/"
+          aria-current={pathname === "/" ? "page" : undefined}
+          className={itemCls(pathname === "/")}
+        >
+          <span className={iconCls(pathname === "/")}>
+            <Home className="size-5" />
+          </span>
           Home
         </Link>
-        <Link href="/search" className={itemCls(pathname === "/search")}>
-          <Search className="size-5" />
+        <Link
+          href="/search"
+          aria-current={pathname === "/search" ? "page" : undefined}
+          className={itemCls(pathname === "/search")}
+        >
+          <span className={iconCls(pathname === "/search")}>
+            <Search className="size-5" />
+          </span>
           Search
         </Link>
         <button
@@ -65,13 +83,22 @@ export function BottomNav() {
         <button
           type="button"
           onClick={() => gatedGo("/chats")}
+          aria-current={pathname.startsWith("/chats") ? "page" : undefined}
           className={itemCls(pathname.startsWith("/chats"))}
         >
-          <MessageCircle className="size-5" />
+          <span className={iconCls(pathname.startsWith("/chats"))}>
+            <MessageCircle className="size-5" />
+          </span>
           Chats
         </button>
-        <Link href="/profile" className={itemCls(pathname === "/profile")}>
-          <User className="size-5" />
+        <Link
+          href="/profile"
+          aria-current={pathname === "/profile" ? "page" : undefined}
+          className={itemCls(pathname === "/profile")}
+        >
+          <span className={iconCls(pathname === "/profile")}>
+            <User className="size-5" />
+          </span>
           Profile
         </Link>
       </div>

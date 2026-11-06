@@ -2,19 +2,21 @@
 // page (gallery left, sticky info right) from lg up (D-054).
 // Full version (seller card, sticky chat bar, wishlist heart) = Phase 3 Task 3.3.
 
-import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { and, eq, ne, sql as dsql } from "drizzle-orm";
-import { ThumbsUp } from "lucide-react";
+import { ChevronRight, Info, Quote, ThumbsUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { BookCard, type BookCardData } from "@/components/book-card";
+import { ListingGallery } from "@/components/listing/listing-gallery";
 import { OpenChatButton } from "@/components/chat/open-chat-button";
-import { WishlistHeart } from "@/components/wishlist-heart";
 import { expireStaleReservation } from "@/services/transactions";
 import { getDb } from "@/db/client";
 import { listingPhotos, listings, ratings, users } from "@/db/schema";
 import { getCurrentUser } from "@/services/users";
 import { wishlistedIds } from "@/services/wishlist";
+import { activeListingsForClass, recentActiveListings } from "@/db/repos/listings";
 import { CONDITIONS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +50,16 @@ export async function generateMetadata({
     description: `${action}${meta ? ` — ${meta}` : ""} on BookLoop, the school book exchange.`,
     robots: { index: false, follow: false },
   };
+}
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }
 
 export default async function ListingPage({
@@ -120,122 +132,236 @@ export default async function ListingPage({
     listing.createdAt.toLocaleDateString("en-IN", { day: "numeric", month: "short" }),
   ]);
 
-  return (
-    <div className="mx-auto mt-4 max-w-5xl pb-8 lg:mt-8 lg:grid lg:grid-cols-2 lg:gap-10">
-      {/* Gallery: swipe strip < lg, stacked column lg+; wishlist heart overlays the first photo */}
-      <div className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 lg:mx-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0">
-        {photos.map((p, i) => (
-          <div
-            key={p.id}
-            className="bg-surface-soft relative aspect-[4/3] w-[85%] shrink-0 snap-center overflow-hidden rounded-2xl lg:w-full"
-          >
-            <Image
-              src={p.url}
-              alt={`${listing.title} — photo ${i + 1}`}
-              fill
-              sizes="(max-width: 1024px) 85vw, 480px"
-              className="object-cover"
-              priority={i === 0}
-            />
-            {i === 0 && !isOwnListing && (
-              <WishlistHeart
-                listingId={listing.id}
-                initialSaved={saved}
-                className="absolute top-2 right-2"
-              />
-            )}
-          </div>
-        ))}
-      </div>
+  const sellerName = seller?.fullName ?? "A student";
+  const sellerListings = sellerStats?.activeListings ?? 0;
+  const sellerThumbs = sellerStats?.thumbsUp ?? 0;
 
-      {/* Info column — sticky on lg */}
-      <div className="mt-4 flex flex-col gap-4 lg:mt-0 lg:self-start lg:sticky lg:top-20">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-start justify-between gap-2">
-            <h1 className="text-display">{listing.title}</h1>
-            {listing.mode === "donate" && (
-              <Badge className="bg-free text-white">FREE</Badge>
+  const [classPool, recentPool] = await Promise.all([
+    listing.class ? activeListingsForClass(listing.class, 9) : Promise.resolve([]),
+    recentActiveListings(12),
+  ]);
+  const seenIds = new Set([listing.id]);
+  const similar: BookCardData[] = [];
+  for (const b of [...classPool, ...recentPool]) {
+    if (seenIds.has(b.id)) continue;
+    seenIds.add(b.id);
+    similar.push(b);
+    if (similar.length === 6) break;
+  }
+  const similarSaved =
+    current && similar.length > 0
+      ? await wishlistedIds(
+          current.profile.id,
+          similar.map((b) => b.id),
+        )
+      : new Set<number>();
+
+  return (
+    <div className="mx-auto mt-3 max-w-6xl pb-32 lg:mt-6 lg:pb-8">
+      <nav
+        aria-label="Breadcrumb"
+        className="text-subtle mb-4 flex min-w-0 items-center gap-1 text-xs"
+      >
+        <Link href="/search" className="hover:text-ink shrink-0 transition">
+          Search
+        </Link>
+        {listing.class && (
+          <>
+            <ChevronRight className="size-3 shrink-0 opacity-60" aria-hidden />
+            <Link
+              href={`/search?class=${listing.class}`}
+              className="hover:text-ink shrink-0 transition"
+            >
+              Class {listing.class}
+            </Link>
+          </>
+        )}
+        <ChevronRight className="size-3 shrink-0 opacity-60" aria-hidden />
+        <span className="text-body truncate">{listing.title}</span>
+      </nav>
+
+      <div className="lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start lg:gap-10">
+        <ListingGallery
+          photos={photos.map((p) => ({ id: p.id, url: p.url }))}
+          title={listing.title}
+          listingId={listing.id}
+          initialSaved={saved}
+          showHeart={!isOwnListing}
+        />
+
+        {/* Info column — sticky on lg */}
+        <div className="mt-5 flex flex-col gap-4 lg:mt-0 lg:sticky lg:top-20">
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {listing.mode === "donate" && (
+                <Badge className="bg-free rounded-full text-white">FREE</Badge>
+              )}
+              {listing.mode === "exchange" && (
+                <Badge variant="secondary" className="rounded-full">
+                  EXCHANGE
+                </Badge>
+              )}
+              {listing.status === "reserved" && (
+                <Badge variant="outline" className="rounded-full">
+                  {listing.mode === "donate" ? "Claimed" : "Reserved"}
+                </Badge>
+              )}
+              {listing.status === "closed" && (
+                <Badge variant="outline" className="rounded-full">
+                  Closed
+                </Badge>
+              )}
+            </div>
+            <h1 className="text-display text-ink">{listing.title}</h1>
+            <p className="text-subtle text-sm">
+              {meta}
+              {meta && " · "}
+              {conditionLabel}
+              {listing.editionYear && ` · ${listing.editionYear}`}
+            </p>
+          </div>
+
+          <div className="border-hairline flex flex-wrap items-end justify-between gap-3 border-y py-4">
+            {listing.mode === "sell" && listing.priceInr != null && (
+              <div className="flex items-baseline gap-2.5">
+                <p className="font-display text-ink text-4xl leading-none font-semibold">
+                  ₹{listing.priceInr}
+                </p>
+                <span className="bg-surface-soft text-body rounded-full px-2.5 py-1 text-[11px] font-medium">
+                  Negotiable
+                </span>
+              </div>
             )}
             {listing.mode === "exchange" && (
-              <Badge variant="secondary">EXCHANGE</Badge>
+              <p className="text-body text-sm">
+                <span className="text-subtle">Wants </span>
+                <span className="text-ink font-semibold">
+                  {listing.wantsBook ?? "a swap"}
+                </span>
+              </p>
             )}
-            {listing.status === "reserved" && (
-              <Badge variant="secondary">
-                {listing.mode === "donate" ? "Claimed" : "Reserved"}
-              </Badge>
+            {listing.mode === "donate" && (
+              <p className="font-display text-free text-3xl font-semibold">Free</p>
             )}
           </div>
-          <p className="text-subtle text-sm">
-            {meta}
-            {meta && " · "}
-            {conditionLabel}
-            {listing.editionYear && ` · ${listing.editionYear}`}
-          </p>
-          {listing.mode === "sell" && listing.priceInr != null && (
-            <p className="text-2xl font-bold">₹{listing.priceInr}</p>
-          )}
-          {listing.mode === "exchange" && listing.wantsBook && (
-            <p className="font-medium">wants: {listing.wantsBook}</p>
-          )}
+
           {listing.conditionNote && (
-            <p className="text-subtle mt-1 text-sm">
-              &quot;{listing.conditionNote}&quot;
-            </p>
-          )}
-          <p className="text-subtle mt-2 text-xs">{listing.bookloopId}</p>
-        </div>
-
-        {/* Seller card — never any contact info (D-004) */}
-        <div className="flex items-center justify-between rounded-2xl bg-card p-4">
-          <div>
-            <p className="text-sm font-semibold">
-              {seller?.fullName ?? "A student"}
-            </p>
-            <p className="text-subtle text-xs">
-              {seller && `Class ${seller.class} · `}
-              {sellerStats?.activeListings ?? 0} listing
-              {(sellerStats?.activeListings ?? 0) === 1 ? "" : "s"}
-            </p>
-          </div>
-          <span className="text-subtle flex items-center gap-1 text-sm">
-            <ThumbsUp className="size-4" /> {sellerStats?.thumbsUp ?? 0}
-          </span>
-        </div>
-
-        <dl className="border-hairline grid grid-cols-2 gap-x-4 gap-y-2 rounded-2xl border p-4 text-sm">
-          {details.map(([label, value]) => (
-            <div key={label} className="flex justify-between gap-2">
-              <dt className="text-subtle shrink-0">{label}</dt>
-              <dd className="min-w-0 truncate text-right font-medium">{value}</dd>
-            </div>
-          ))}
-        </dl>
-
-        {/* Sticky chat bar: fixed above the tab bar < lg, inline in the info
-            column lg+ — the ONE green action on the page (UI_REFERENCE §3).
-            Activates in Phase 4. */}
-        {!isOwnListing && listing.status === "active" && (
-          <div className="border-hairline bg-card fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t p-3 shadow-lg md:bottom-0 lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
-            <div className="mx-auto max-w-md lg:max-w-none">
-              <OpenChatButton listingId={listing.id} />
-              <p className="text-subtle mt-1 text-center text-xs">
-                Handover happens at the school pickup point
+            <div className="bg-surface-soft/70 rounded-2xl p-3.5">
+              <p className="text-subtle flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase">
+                <Quote className="size-3" /> Seller&apos;s note
+              </p>
+              <p className="text-body mt-1.5 text-sm leading-relaxed">
+                {listing.conditionNote}
               </p>
             </div>
-          </div>
-        )}
-        {listing.status === "reserved" && (
-          <div className="bg-surface-soft rounded-lg p-3 text-center text-sm">
-            This book is reserved.{" "}
-            <a
-              href={`/search?class=${listing.class ?? ""}`}
-              className="text-primary underline-offset-4 hover:underline"
+          )}
+
+          {/* Seller card — never any contact info (D-004) */}
+          <div className="bg-card flex items-center gap-3 rounded-2xl p-4">
+            <span
+              aria-hidden
+              className="bg-primary-soft text-primary-active flex size-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
             >
-              See similar books
-            </a>
+              {initials(sellerName)}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-ink truncate text-sm font-semibold">{sellerName}</p>
+              <p className="text-subtle text-xs">
+                {seller && `Class ${seller.class} · `}
+                {sellerListings} listing{sellerListings === 1 ? "" : "s"}
+              </p>
+            </div>
+            <span
+              className="bg-surface-soft text-body flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+              title={`${sellerThumbs} helpful ratings`}
+            >
+              <ThumbsUp className="size-3.5" /> {sellerThumbs}
+            </span>
           </div>
-        )}
+
+          <dl className="border-hairline grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-2xl border p-4 text-sm">
+            {details.map(([label, value]) => (
+              <div key={label} className="flex justify-between gap-2">
+                <dt className="text-subtle shrink-0">{label}</dt>
+                <dd className="min-w-0 truncate text-right font-medium">{value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          {/* Sticky chat bar: fixed above the tab bar < lg, inline in the info
+              column lg+ — the ONE green action on the page (UI_REFERENCE §3). */}
+          {!isOwnListing && listing.status === "active" && (
+            <div className="border-hairline bg-card/95 fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t p-3 shadow-[0_-12px_30px_-24px_rgba(0,0,0,0.4)] backdrop-blur md:bottom-0 lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none">
+              <div className="mx-auto max-w-md lg:max-w-none">
+                <OpenChatButton listingId={listing.id} />
+                <p className="text-subtle mt-1.5 text-center text-[11px]">
+                  Handover happens at the school pickup point
+                </p>
+              </div>
+            </div>
+          )}
+
+          {listing.status === "reserved" && (
+            <div className="bg-surface-soft text-body flex items-start gap-2.5 rounded-xl p-3.5 text-sm">
+              <Info className="text-primary mt-0.5 size-4 shrink-0" />
+              <span>
+                This book is reserved.{" "}
+                <Link
+                  href={`/search?class=${listing.class ?? ""}`}
+                  className="text-primary font-medium underline-offset-4 hover:underline"
+                >
+                  See similar books
+                </Link>
+              </span>
+            </div>
+          )}
+
+          {isOwnListing && (
+            <div className="bg-surface-soft text-body rounded-xl p-3.5 text-sm">
+              This is your listing.{" "}
+              <Link
+                href={`/sell?edit=${listing.id}`}
+                className="text-primary font-medium underline-offset-4 hover:underline"
+              >
+                Edit it
+              </Link>
+            </div>
+          )}
+
+          <p className="text-subtle text-[10px]">Listing {listing.bookloopId}</p>
+        </div>
       </div>
+
+      {similar.length > 0 && (
+        <section className="border-hairline mt-12 border-t pt-8">
+          <div className="flex items-baseline justify-between gap-3">
+            <div>
+              <p className="text-primary text-[10px] font-semibold tracking-[0.2em] uppercase">
+                Keep browsing
+              </p>
+              <h2 className="font-display text-ink mt-1 text-2xl font-semibold tracking-tight">
+                {listing.class ? `More in Class ${listing.class}` : "More books like this"}
+              </h2>
+            </div>
+            <Link
+              href={listing.class ? `/search?class=${listing.class}` : "/search"}
+              className="text-body hover:text-ink shrink-0 text-sm font-medium transition"
+            >
+              See all
+            </Link>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            {similar.map((b: BookCardData) => (
+              <BookCard
+                key={b.id}
+                book={b}
+                layout="grid"
+                saved={similarSaved.has(b.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

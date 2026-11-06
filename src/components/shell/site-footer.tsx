@@ -1,7 +1,7 @@
 // Slim site footer: wayfinding, the promise, and the one-line brand story.
 
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Recycle, ShieldCheck } from "lucide-react";
 
 const COLUMNS = [
   {
@@ -34,7 +34,7 @@ const COLUMNS = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-hairline bg-surface-soft/70 mt-16 border-t pb-20 md:pb-0">
+    <footer className="border-hairline bg-surface-soft/70 mt-12 border-t pb-20 md:pb-0">
       <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
@@ -48,9 +48,16 @@ export function SiteFooter() {
               Give every school book a second life. Buy, sell, exchange or
               donate with students from your own school.
             </p>
-            <p className="text-subtle mt-3 text-[11px]">
-              Free for students · Classes 1–12
-            </p>
+            <div className="text-subtle mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px]">
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="text-primary size-3.5" />
+                School-only network
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Recycle className="text-primary size-3.5" />
+                Free for students
+              </span>
+            </div>
           </div>
 
           {COLUMNS.map((col) => (
@@ -63,7 +70,7 @@ export function SiteFooter() {
                   <li key={l.label}>
                     <Link
                       href={l.href}
-                      className="text-subtle hover:text-ink text-sm transition"
+                      className="text-subtle hover:text-ink text-sm transition hover:underline hover:underline-offset-4"
                     >
                       {l.label}
                     </Link>

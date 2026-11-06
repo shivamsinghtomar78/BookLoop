@@ -43,7 +43,7 @@ export async function openChatAction(
   }
 }
 
-const messageSchema = z.string().trim().min(1, "Say something 🙂").max(1000);
+const messageSchema = z.string().trim().min(1, "Type a message first.").max(1000);
 
 export async function sendMessageAction(
   chatId: number,

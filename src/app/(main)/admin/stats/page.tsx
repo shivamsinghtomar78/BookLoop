@@ -100,7 +100,7 @@ export default async function AdminStatsPage() {
     ["Messages sent", messagesSent],
     ["Deals completed", closedDeals],
     ["Books donated (completed)", donationsDone],
-    ["👍 given", thumbsGiven],
+    ["Likes given", thumbsGiven],
   ];
 
   return (
@@ -121,7 +121,7 @@ export default async function AdminStatsPage() {
 
       <h2 className="text-title-lg mt-8">Problem reports (latest 20)</h2>
       {reports.length === 0 ? (
-        <p className="text-subtle mt-2 text-sm">None yet 🎉</p>
+        <p className="text-subtle mt-2 text-sm">Nothing reported.</p>
       ) : (
         <ul className="mt-2 flex flex-col gap-2">
           {reports.map((r) => (

@@ -96,6 +96,9 @@ export function Hero({
             >
               <BookloopHero />
             </div>
+            <p className="mt-3 text-center text-[11px] font-medium tracking-[0.16em] text-white/35 uppercase lg:hidden">
+              A reservation, start to finish
+            </p>
           </div>
           <HeroSearch />
         </div>

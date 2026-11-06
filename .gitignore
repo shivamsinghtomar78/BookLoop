@@ -44,6 +44,7 @@ next-env.d.ts
 
 # local agent settings & generated skills
 .claude/
+.qoder/
 
 # playwright mcp artifacts
 .playwright-mcp/
